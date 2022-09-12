@@ -2,8 +2,8 @@
 #include "periodic_execution.h"
 
 std::vector<PeriodicExecution::Routine> routines;
-constexpr int screen_refresh_time = 50,
-              adc_refresh_time = 2;
+constexpr int screen_refresh_time = 20,
+              adc_refresh_time = 1;
 
 void setup() {
   Serial.begin(9600);

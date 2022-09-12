@@ -8,3 +8,5 @@ void init_devices();
 void refresh_screen();
 
 void refresh_adc();
+
+void do_ADC_debug();
