@@ -1,26 +1,39 @@
 #include "functions.h"
+#include "button.h"
 #include <sstream>
+#include <iomanip>
 #include <list>
 #include <vector>
 #include <numeric>
 
 namespace
 {
+	constexpr int OUTER_LEFT_PIN = A5,
+				  INTER_LEFT_PIN = A4,
+				  MID_LEFT_PIN = A7,
+				  MID_RIGHT_PIN = A6,
+				  INTER_RIGHT_PIN = A3,
+				  OUTER_RIGHT_PIN = A0;
+	constexpr int MEAN_SIZE = 10;
+
+	constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096;
+
 	struct Sensor
 	{
 		Sensor(const int _pin, int mean = 0, std::list<double> values = {}) : pin(_pin) {}
 		const int pin;
-		double mean = 0;
+		double value = 0, min = 0, max = 4096, percentage = 0;
 		std::list<double> values = {};
 	};
 
-	constexpr int OUTER_LEFT_PIN = A19,
-				  INTER_LEFT_PIN = A18,
-				  MID_LEFT_PIN = A5,
-				  MID_RIGHT_PIN = A4,
-				  INTER_RIGHT_PIN = A7,
-				  OUTER_RIGHT_PIN = A6;
-	constexpr int MEAN_SIZE = 10;
+	enum class CALIBRATION_STATUS {
+		IDLE,
+		WHITE, 
+		WAIT,
+		BLACK
+	};
+
+	CALIBRATION_STATUS calibration_status = CALIBRATION_STATUS::IDLE;
 
 	SSD1306Wire display(0x3c, SDA, SCL);
 
@@ -32,6 +45,12 @@ namespace
 		{INTER_RIGHT_PIN},
 		{OUTER_RIGHT_PIN},
 	};
+
+	bool go_to_next_phase = false;
+
+	std::vector<Buttons::Button> buttons = {
+		{GPIO_NUM_26, []()
+		 { go_to_next_phase = true; }}};
 
 	void init_OLED()
 	{
@@ -63,11 +82,20 @@ void refresh_screen()
 	int i = 0;
 	for (const auto &sensor : sensor_board)
 	{
-		if (i++ == 3)
+		ss << sensor.value << " " << sensor.min << " " << sensor.max;
+		if (i++ % 2)
 		{
 			ss << "\n";
+		} else {
+			ss << " | ";
 		}
-		ss << sensor.mean << " ";
+	}
+
+	ss << "\n" << int(calibration_status) << "\n";
+
+	for (const auto &sensor : sensor_board)
+	{
+		ss << std::round(sensor.percentage) << " ";
 	}
 
 	display.clear();
@@ -86,7 +114,62 @@ void refresh_adc()
 		{
 			sensor.values.pop_front();
 		}
-		sensor.mean = std::round(*std::max_element(sensor.values.begin(), sensor.values.end())/100);
+		sensor.value = std::round(*std::max_element(sensor.values.begin(), sensor.values.end()) / 10);
+		if(calibration_status == CALIBRATION_STATUS::WHITE && sensor.value < sensor.max) {
+			sensor.max = sensor.value;
+		}
+		if(calibration_status == CALIBRATION_STATUS::BLACK && sensor.value > sensor.min) {
+			sensor.min = sensor.value;
+		}
+
+		sensor.percentage = (sensor.value - sensor.min)/(sensor.max - sensor.min);
+		sensor.percentage = sensor.percentage > 1 ? 1 : sensor.percentage;
+		sensor.percentage = sensor.percentage < 0 ? 0 : sensor.percentage;
+		sensor.percentage *= 100;
+	}
+}
+
+void refresh_buttons()
+{
+	for (auto &button : buttons)
+	{
+		button.update_button();
+	}
+}
+
+void do_ADC_calibration() {
+	switch (calibration_status)
+	{
+	case CALIBRATION_STATUS::IDLE:
+		if(go_to_next_phase) {
+			calibration_status = CALIBRATION_STATUS::WHITE;
+
+			for(auto &sensor: sensor_board) {
+				sensor.min = MIN_SENSOR_VALUE;
+				sensor.max = MAX_SENSOR_VALUE;
+			}
+
+			go_to_next_phase = false;
+		}
+		break;
+	case CALIBRATION_STATUS::WHITE:
+		if(go_to_next_phase) {
+			calibration_status = CALIBRATION_STATUS::WAIT;
+			go_to_next_phase = false;
+		}
+		break;
+	case CALIBRATION_STATUS::WAIT:
+		if(go_to_next_phase) {
+			calibration_status = CALIBRATION_STATUS::BLACK;
+			go_to_next_phase = false;
+		}
+		break;
+	case CALIBRATION_STATUS::BLACK:
+		if(go_to_next_phase) {
+			calibration_status = CALIBRATION_STATUS::IDLE;
+			go_to_next_phase = false;
+		}
+		break;
 	}
 }
 
