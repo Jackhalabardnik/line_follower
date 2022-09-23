@@ -1,5 +1,6 @@
 #include "functions.h"
 #include "button.h"
+#include "engine.h"
 #include <sstream>
 #include <iomanip>
 #include <list>
@@ -59,7 +60,7 @@ namespace
 		{OUTER_RIGHT_PIN},
 	};
 
-	unsigned char left_engine_pwm = 0, right_engine_pwm = 0; 
+	Engine left_engine(), right_engine();
 
 	bool go_to_next_calibration_phase = false,
 		 go_to_next_move_mode = false;
@@ -125,6 +126,14 @@ namespace
 			break;
 		}
 		return os;
+	}
+
+	void start_following() {
+
+	}
+
+	void stop_following() {
+
 	}
 }
 
