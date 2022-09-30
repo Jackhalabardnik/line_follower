@@ -9,12 +9,15 @@ constexpr int main_logic_time = 10,
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("\n");
+  Serial.println("Begin setup");
   init_devices();
 
   routines.push_back({adc_refresh_time, refresh_adc});
   routines.push_back({button_refresh_time, refresh_buttons});
   routines.push_back({main_logic_time, do_main_logic});
   routines.push_back({screen_refresh_time, refresh_screen});
+  Serial.println("Finished setup");
 }
 
 void loop() {

@@ -15,18 +15,33 @@ namespace
 				  MID_RIGHT_PIN = A6,
 				  INTER_RIGHT_PIN = A3,
 				  OUTER_RIGHT_PIN = A0,
-				  CALIBRATION_PIN = GPIO_NUM_26,
-				  ROBOT_STATUS_PIN = GPIO_NUM_27;
-				  
+				  CALIBRATION_PIN = GPIO_NUM_25,
+				  ROBOT_STATUS_PIN = GPIO_NUM_26,
+				  PWM_LEFT_ENGINE_PIN = GPIO_NUM_19,
+				  FORWARD_LEFT_ENGINE_PIN = GPIO_NUM_18,
+				  BACKWARD_LEFT_ENGINE_PIN = GPIO_NUM_17,
+				  BACKWARD_RIGHT_ENGINE_PIN = GPIO_NUM_16,
+				  FORWARD_RIGHT_ENGINE_PIN = GPIO_NUM_27,
+				  PWM_RIGHT_ENGINE_PIN = GPIO_NUM_14;
+
+	constexpr int LEFT_ENGINE_PWM_CHANNEL = 1,
+				  RIGHT_ENGINE_PWM_CHANNEL = 2;
+
 	constexpr int MEAN_SIZE = 10;
 
-	constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096;
+	constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, SENSOR_BUFFER = 10;
+
+	constexpr int SAFE_BUFFER = 200;
+
+	constexpr double MAX_SPEED = 100.0, MIN_SPEED = 0, IDLE_SPEED = 60.0;
+
+	constexpr double MID_MUL = 1, INTER_MUL = 3;
 
 	struct Sensor
 	{
 		Sensor(const int _pin, int mean = 0, std::list<double> values = {}) : pin(_pin) {}
 		const int pin;
-		double value = 0, min = 0, max = 4096, percentage = 0;
+		double value = 0, min = MIN_SENSOR_VALUE, max = MAX_SENSOR_VALUE, percentage = 0;
 		std::list<double> values = {};
 	};
 
@@ -60,10 +75,16 @@ namespace
 		{OUTER_RIGHT_PIN},
 	};
 
-	Engine left_engine(), right_engine();
+	Engine left_engine(FORWARD_LEFT_ENGINE_PIN, BACKWARD_LEFT_ENGINE_PIN, PWM_LEFT_ENGINE_PIN, LEFT_ENGINE_PWM_CHANNEL),
+		right_engine(FORWARD_RIGHT_ENGINE_PIN, BACKWARD_RIGHT_ENGINE_PIN, PWM_RIGHT_ENGINE_PIN, RIGHT_ENGINE_PWM_CHANNEL);
+
+	int left_engine_debug = 0;
+	int right_engine_debug = 0;
 
 	bool go_to_next_calibration_phase = false,
 		 go_to_next_move_mode = false;
+
+	int safe_buffer_value = 0;
 
 	std::vector<Buttons::Button> buttons = {
 		{CALIBRATION_PIN, []()
@@ -86,6 +107,12 @@ namespace
 		pinMode(MID_RIGHT_PIN, INPUT);
 		pinMode(INTER_RIGHT_PIN, INPUT);
 		pinMode(OUTER_RIGHT_PIN, INPUT);
+	}
+
+	void init_engines()
+	{
+		left_engine.init();
+		right_engine.init();
 	}
 
 	std::ostream &operator<<(std::ostream &os, const ROBOT_STATUS &status)
@@ -128,12 +155,31 @@ namespace
 		return os;
 	}
 
-	void start_following() {
-
+	void start_following()
+	{
+		robot_status = ROBOT_STATUS::FOLLOWING;
 	}
 
-	void stop_following() {
+	void stop_following()
+	{
+		robot_status = ROBOT_STATUS::READY;
+		left_engine.set_speed(0);
+		right_engine.set_speed(0);
+		left_engine_debug = 0;
+		right_engine_debug = 0;
+	}
 
+	void check_safe_buffer() {
+		if(sensor_board[2].percentage < SENSOR_BUFFER && sensor_board[3].percentage < SENSOR_BUFFER) {
+			safe_buffer_value++;
+		} else {
+			safe_buffer_value = 0;
+		}
+
+		if(safe_buffer_value >= SAFE_BUFFER) {
+			safe_buffer_value = 0;
+			stop_following();
+		}
 	}
 }
 
@@ -141,6 +187,7 @@ void init_devices()
 {
 	init_OLED();
 	init_adc();
+	init_engines();
 }
 
 void refresh_screen()
@@ -160,18 +207,19 @@ void refresh_screen()
 		{
 			ss << std::round(sensor.percentage) << " ";
 		}
-		ss << "\nL: " << int(left_engine_pwm) << " R: " << int(right_engine_pwm) << "\n";
+		ss << "\nL: " << left_engine.get_speed() << " R: " << right_engine.get_speed() << "\n";
+		ss << "\nLD: " << left_engine_debug << " RD: " << right_engine_debug << "\n";
 	}
 
 	display.clear();
 
 	display.drawString(1, 1, ss.str().c_str());
 
-	if (robot_status == ROBOT_STATUS::READY || robot_status == ROBOT_STATUS::FOLLOWING)
-	{
-		display.fillRect(1, 40, (double(left_engine_pwm)/255.0 *100),5);
-		display.fillRect(1, 50, (right_engine_pwm/255.0 *100),5);
-	}
+	// if (robot_status == ROBOT_STATUS::READY || robot_status == ROBOT_STATUS::FOLLOWING)
+	// {
+	// 	display.fillRect(1, 40, left_engine.get_speed(), 5);
+	// 	display.fillRect(1, 50, right_engine.get_speed(), 5);
+	// }
 
 	display.display();
 }
@@ -198,7 +246,8 @@ void refresh_adc()
 		sensor.percentage = (sensor.value - sensor.min) / (sensor.max - sensor.min);
 		sensor.percentage = sensor.percentage > 1 ? 1 : sensor.percentage;
 		sensor.percentage = sensor.percentage < 0 ? 0 : sensor.percentage;
-		sensor.percentage *= 100;
+		sensor.percentage *= 100.0;
+		sensor.percentage = 100.0 - sensor.percentage;
 	}
 }
 
@@ -253,10 +302,10 @@ void check_move_mode()
 		case ROBOT_STATUS::CALIBRATION:
 			break;
 		case ROBOT_STATUS::READY:
-			robot_status = ROBOT_STATUS::FOLLOWING;
+			start_following();
 			break;
 		case ROBOT_STATUS::FOLLOWING:
-			robot_status = ROBOT_STATUS::READY;
+			stop_following();
 		}
 		go_to_next_move_mode = false;
 	}
@@ -264,21 +313,41 @@ void check_move_mode()
 
 void do_PID_calculation()
 {
+	double left_engine_speed = IDLE_SPEED, right_engine_speed = IDLE_SPEED;
 
+	double equilibrium = (sensor_board[2].percentage + sensor_board[3].percentage) / 2;
+
+	left_engine_speed += (sensor_board[2].percentage - equilibrium) * MID_MUL;
+	right_engine_speed += (sensor_board[3].percentage - equilibrium) * MID_MUL;
+
+	if (sensor_board[1].percentage > SENSOR_BUFFER)
+	{
+		left_engine_speed -= sensor_board[1].percentage * INTER_MUL;
+		right_engine_speed += sensor_board[1].percentage * INTER_MUL;
+	}
+
+	if (sensor_board[4].percentage > SENSOR_BUFFER)
+	{
+		left_engine_speed += sensor_board[4].percentage * INTER_MUL;
+		right_engine_speed -= sensor_board[4].percentage * INTER_MUL;
+	}
+
+	left_engine_debug = left_engine_speed;
+	right_engine_debug = right_engine_speed;
+
+	left_engine.set_speed(left_engine_speed);
+	right_engine.set_speed(right_engine_speed);
 }
 
-void set_engine_speed() 
+void do_main_logic()
 {
-	left_engine_pwm = 40;
-	right_engine_pwm = 200;
-}
-
-void do_main_logic() {
 	do_ADC_calibration();
 	check_move_mode();
-	do_PID_calculation();
-	set_engine_speed();
-	refresh_screen();
+	if (robot_status == ROBOT_STATUS::FOLLOWING)
+	{
+		do_PID_calculation();
+		check_safe_buffer();
+	}
 }
 
 void do_ADC_debug()
