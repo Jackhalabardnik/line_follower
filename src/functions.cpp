@@ -15,14 +15,14 @@ namespace
 				  MID_RIGHT_PIN = A6,
 				  INTER_RIGHT_PIN = A3,
 				  OUTER_RIGHT_PIN = A0,
-				  CALIBRATION_PIN = GPIO_NUM_25,
-				  ROBOT_STATUS_PIN = GPIO_NUM_26,
-				  PWM_LEFT_ENGINE_PIN = GPIO_NUM_19,
-				  FORWARD_LEFT_ENGINE_PIN = GPIO_NUM_18,
+				  CALIBRATION_PIN = GPIO_NUM_19,
+				  ROBOT_STATUS_PIN = GPIO_NUM_18,
+				  PWM_LEFT_ENGINE_PIN = GPIO_NUM_16,
+				  FORWARD_LEFT_ENGINE_PIN = GPIO_NUM_26,
 				  BACKWARD_LEFT_ENGINE_PIN = GPIO_NUM_17,
-				  BACKWARD_RIGHT_ENGINE_PIN = GPIO_NUM_16,
-				  FORWARD_RIGHT_ENGINE_PIN = GPIO_NUM_27,
-				  PWM_RIGHT_ENGINE_PIN = GPIO_NUM_14;
+				  BACKWARD_RIGHT_ENGINE_PIN = GPIO_NUM_27,
+				  FORWARD_RIGHT_ENGINE_PIN = GPIO_NUM_14,
+				  PWM_RIGHT_ENGINE_PIN = GPIO_NUM_25;
 
 	constexpr int LEFT_ENGINE_PWM_CHANNEL = 1,
 				  RIGHT_ENGINE_PWM_CHANNEL = 2;
@@ -186,8 +186,11 @@ namespace
 void init_devices()
 {
 	init_OLED();
+	Serial.println("OLED done");
 	init_adc();
+	Serial.println("ADC done");
 	init_engines();
+	Serial.println("Engines screaming");
 }
 
 void refresh_screen()
