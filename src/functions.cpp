@@ -29,13 +29,13 @@ namespace
 
 	constexpr int MEAN_SIZE = 10;
 
-	constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, SENSOR_BUFFER = 10;
+	constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, DOWN_SENSOR_BUFFER = 10, UP_SENSOR_BUFFER = 90;
 
 	constexpr int SAFE_BUFFER = 200;
 
-	constexpr double MAX_SPEED = 100.0, MIN_SPEED = 0, IDLE_SPEED = 60.0;
+	constexpr double MAX_SPEED = 60, MIN_SPEED = 0, IDLE_SPEED = 40.0;
 
-	constexpr double MID_MUL = 1, INTER_MUL = 3;
+	constexpr double MID_MUL = 0.2, INTER_MUL = 2;
 
 	struct Sensor
 	{
@@ -170,7 +170,8 @@ namespace
 	}
 
 	void check_safe_buffer() {
-		if(sensor_board[2].percentage < SENSOR_BUFFER && sensor_board[3].percentage < SENSOR_BUFFER) {
+		if((sensor_board[2].percentage < DOWN_SENSOR_BUFFER && sensor_board[3].percentage < DOWN_SENSOR_BUFFER) 
+		|| ((sensor_board[2].percentage > UP_SENSOR_BUFFER && sensor_board[3].percentage > UP_SENSOR_BUFFER))) {
 			safe_buffer_value++;
 		} else {
 			safe_buffer_value = 0;
@@ -180,6 +181,12 @@ namespace
 			safe_buffer_value = 0;
 			stop_following();
 		}
+	}
+
+	template <typename T>
+	void bound_value(T &value, T min, T max) {
+		value = value > max ? max : value;
+		value = value < min ? min : value;
 	}
 }
 
@@ -247,8 +254,7 @@ void refresh_adc()
 		}
 
 		sensor.percentage = (sensor.value - sensor.min) / (sensor.max - sensor.min);
-		sensor.percentage = sensor.percentage > 1 ? 1 : sensor.percentage;
-		sensor.percentage = sensor.percentage < 0 ? 0 : sensor.percentage;
+		bound_value(sensor.percentage, 0.0, 1.0);
 		sensor.percentage *= 100.0;
 		sensor.percentage = 100.0 - sensor.percentage;
 	}
@@ -323,13 +329,13 @@ void do_PID_calculation()
 	left_engine_speed += (sensor_board[2].percentage - equilibrium) * MID_MUL;
 	right_engine_speed += (sensor_board[3].percentage - equilibrium) * MID_MUL;
 
-	if (sensor_board[1].percentage > SENSOR_BUFFER)
+	if (sensor_board[1].percentage > DOWN_SENSOR_BUFFER)
 	{
 		left_engine_speed -= sensor_board[1].percentage * INTER_MUL;
 		right_engine_speed += sensor_board[1].percentage * INTER_MUL;
 	}
 
-	if (sensor_board[4].percentage > SENSOR_BUFFER)
+	if (sensor_board[4].percentage > DOWN_SENSOR_BUFFER)
 	{
 		left_engine_speed += sensor_board[4].percentage * INTER_MUL;
 		right_engine_speed -= sensor_board[4].percentage * INTER_MUL;
@@ -337,6 +343,9 @@ void do_PID_calculation()
 
 	left_engine_debug = left_engine_speed;
 	right_engine_debug = right_engine_speed;
+
+	bound_value(left_engine_speed, MIN_SPEED, MAX_SPEED);
+	bound_value(right_engine_speed, MIN_SPEED, MAX_SPEED);
 
 	left_engine.set_speed(left_engine_speed);
 	right_engine.set_speed(right_engine_speed);
