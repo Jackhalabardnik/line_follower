@@ -12,6 +12,9 @@ void Sensor::init() {
 
 void Sensor::measure_brightness() {
     values.emplace_back(analog_input->get_value());
+    if(values.size() > SensorUtils::WINDOW_SIZE) {
+        values.pop_front();
+    }
     value = *std::max_element(values.begin(), values.end());
 }
 
@@ -23,6 +26,6 @@ double Sensor::get_denoised_value() {
     return value;
 }
 
-void Sensor::set_calibration_state(CalibrationState state) {
+void Sensor::set_calibration_state(SensorUtils::CalibrationState state) {
 
 }
