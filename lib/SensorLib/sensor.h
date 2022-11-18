@@ -1,8 +1,6 @@
 #pragma once
 #include "analoginterface.h"
 
-#include <Arduino.h>
-
 #include <list>
 #include <memory>
 
@@ -12,16 +10,21 @@ enum class CalibrationState {NONE, WHITE, BLACK};
 
 class Sensor
 {
-    Sensor(const int pin, std::unique_ptr<AnalogInterface> analog_input);
+public:
+
+    Sensor(std::unique_ptr<AnalogInterface> &&analog_input);
+
+    void init();
 
     void measure_brightness();
 
     double get_brightness_percentage();
 
+    double get_denoised_value();
+
     void set_calibration_state(CalibrationState state);
 
 private:
-    const int pin;
     double value = 0, min = MIN_SENSOR_VALUE, max = MAX_SENSOR_VALUE, percentage = 0;
     std::list<double> values;
     std::unique_ptr<AnalogInterface> analog_input;

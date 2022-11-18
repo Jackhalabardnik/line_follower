@@ -4,8 +4,8 @@
 class AnalogInput : public AnalogInterface
 {
     AnalogInput(int pin_number);
-    void init();
 
+    void init() override;
     double get_value() override;
 private:
     int analog_pin_number;
