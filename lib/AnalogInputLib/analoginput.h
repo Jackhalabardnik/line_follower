@@ -4,6 +4,7 @@
 
 class AnalogInput : public AnalogInterface
 {
+public:
     AnalogInput(int pinNumber);
 
     void init() override;

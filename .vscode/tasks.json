@@ -32,6 +32,15 @@
 				"isDefault": true
 			},
 			"label": "PlatformIO: Test (native)"
+		},
+		{
+			"type": "PlatformIO",
+			"task": "Build (esp32dev)",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build",
+			"label": "PlatformIO: Build (esp32dev)"
 		}
 	]
 }

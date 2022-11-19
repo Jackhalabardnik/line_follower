@@ -6,7 +6,7 @@
 
 Sensor::Sensor(std::unique_ptr<AnalogInterface> &&analogInput)
     : analogInput(std::move(analogInput)) {}
-
+    
 void Sensor::init() {
     analogInput->init();
 }

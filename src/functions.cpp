@@ -1,6 +1,10 @@
 #include "functions.h"
 #include "button.h"
 #include "engine.h"
+#include "sensor.h"
+#include "analoginput.h"
+#include "utils.h"
+
 #include <sstream>
 #include <iomanip>
 #include <list>
@@ -29,21 +33,13 @@ namespace
 
 	constexpr int MEAN_SIZE = 10;
 
-	constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, DOWN_SENSOR_BUFFER = 10, UP_SENSOR_BUFFER = 90;
+	constexpr int DOWN_SENSOR_BUFFER = 10, UP_SENSOR_BUFFER = 90;
 
 	constexpr int SAFE_BUFFER = 200;
 
 	constexpr double MAX_SPEED = 60, MIN_SPEED = 0, IDLE_SPEED = 40.0;
 
 	constexpr double MID_MUL = 0.2, INTER_MUL = 2;
-
-	struct Sensor
-	{
-		Sensor(const int _pin, int mean = 0, std::list<double> values = {}) : pin(_pin) {}
-		const int pin;
-		double value = 0, min = MIN_SENSOR_VALUE, max = MAX_SENSOR_VALUE, percentage = 0;
-		std::list<double> values = {};
-	};
 
 	enum class CALIBRATION_STATUS
 	{
@@ -66,14 +62,7 @@ namespace
 
 	SSD1306Wire display(0x3c, SDA, SCL);
 
-	std::vector<Sensor> sensor_board = {
-		{OUTER_LEFT_PIN},
-		{INTER_LEFT_PIN},
-		{MID_LEFT_PIN},
-		{MID_RIGHT_PIN},
-		{INTER_RIGHT_PIN},
-		{OUTER_RIGHT_PIN},
-	};
+	std::vector<Sensor> sensor_board = {};
 
 	Engine left_engine(FORWARD_LEFT_ENGINE_PIN, BACKWARD_LEFT_ENGINE_PIN, PWM_LEFT_ENGINE_PIN, LEFT_ENGINE_PWM_CHANNEL),
 		right_engine(FORWARD_RIGHT_ENGINE_PIN, BACKWARD_RIGHT_ENGINE_PIN, PWM_RIGHT_ENGINE_PIN, RIGHT_ENGINE_PWM_CHANNEL);
@@ -101,12 +90,16 @@ namespace
 
 	void init_adc()
 	{
-		pinMode(OUTER_LEFT_PIN, INPUT);
-		pinMode(INTER_LEFT_PIN, INPUT);
-		pinMode(MID_LEFT_PIN, INPUT);
-		pinMode(MID_RIGHT_PIN, INPUT);
-		pinMode(INTER_RIGHT_PIN, INPUT);
-		pinMode(OUTER_RIGHT_PIN, INPUT);
+		sensor_board.emplace_back(std::make_unique<AnalogInput>(OUTER_LEFT_PIN));
+		sensor_board.emplace_back(std::make_unique<AnalogInput>(INTER_LEFT_PIN));
+		sensor_board.emplace_back(std::make_unique<AnalogInput>(MID_LEFT_PIN));
+		sensor_board.emplace_back(std::make_unique<AnalogInput>(MID_RIGHT_PIN));
+		sensor_board.emplace_back(std::make_unique<AnalogInput>(INTER_RIGHT_PIN));
+		sensor_board.emplace_back(std::make_unique<AnalogInput>(OUTER_RIGHT_PIN));
+
+		for(auto &sensor : sensor_board) {
+			sensor.init();
+		}
 	}
 
 	void init_engines()
@@ -170,8 +163,8 @@ namespace
 	}
 
 	void check_safe_buffer() {
-		if((sensor_board[2].percentage < DOWN_SENSOR_BUFFER && sensor_board[3].percentage < DOWN_SENSOR_BUFFER) 
-		|| ((sensor_board[2].percentage > UP_SENSOR_BUFFER && sensor_board[3].percentage > UP_SENSOR_BUFFER))) {
+		if((sensor_board[2].getBlackPercentage() < DOWN_SENSOR_BUFFER && sensor_board[3].getBlackPercentage() < DOWN_SENSOR_BUFFER) 
+		|| ((sensor_board[2].getBlackPercentage() > UP_SENSOR_BUFFER && sensor_board[3].getBlackPercentage() > UP_SENSOR_BUFFER))) {
 			safe_buffer_value++;
 		} else {
 			safe_buffer_value = 0;
@@ -181,12 +174,6 @@ namespace
 			safe_buffer_value = 0;
 			stop_following();
 		}
-	}
-
-	template <typename T>
-	void bound_value(T &value, T min, T max) {
-		value = value > max ? max : value;
-		value = value < min ? min : value;
 	}
 }
 
@@ -213,9 +200,9 @@ void refresh_screen()
 
 	if (robot_status == ROBOT_STATUS::READY || robot_status == ROBOT_STATUS::FOLLOWING)
 	{
-		for (const auto &sensor : sensor_board)
+		for (auto &sensor : sensor_board)
 		{
-			ss << std::round(sensor.percentage) << " ";
+			ss << std::round(sensor.getBlackPercentage()) << " ";
 		}
 		ss << "\nL: " << left_engine.getSpeed() << " R: " << right_engine.getSpeed() << "\n";
 		ss << "\nLD: " << left_engine_debug << " RD: " << right_engine_debug << "\n";
@@ -238,25 +225,7 @@ void refresh_adc()
 {
 	for (auto &sensor : sensor_board)
 	{
-		sensor.values.emplace_back(analogRead(sensor.pin));
-		if (sensor.values.size() > MEAN_SIZE)
-		{
-			sensor.values.pop_front();
-		}
-		sensor.value = std::round(*std::max_element(sensor.values.begin(), sensor.values.end()) / 10);
-		if (calibration_status == CALIBRATION_STATUS::WHITE && sensor.value < sensor.max)
-		{
-			sensor.max = sensor.value;
-		}
-		if (calibration_status == CALIBRATION_STATUS::BLACK && sensor.value > sensor.min)
-		{
-			sensor.min = sensor.value;
-		}
-
-		sensor.percentage = (sensor.value - sensor.min) / (sensor.max - sensor.min);
-		bound_value(sensor.percentage, 0.0, 1.0);
-		sensor.percentage *= 100.0;
-		sensor.percentage = 100.0 - sensor.percentage;
+		sensor.measureBlackLevel();
 	}
 }
 
@@ -272,6 +241,7 @@ void do_ADC_calibration()
 {
 	if (go_to_next_calibration_phase)
 	{
+		auto calibrationState = SensorUtils::CalibrationState::NONE;
 		switch (calibration_status)
 		{
 		case CALIBRATION_STATUS::IDLE:
@@ -279,12 +249,7 @@ void do_ADC_calibration()
 			{
 				calibration_status = CALIBRATION_STATUS::WHITE;
 				robot_status = ROBOT_STATUS::CALIBRATION;
-
-				for (auto &sensor : sensor_board)
-				{
-					sensor.min = MIN_SENSOR_VALUE;
-					sensor.max = MAX_SENSOR_VALUE;
-				}
+				calibrationState = SensorUtils::CalibrationState::WHITE;
 			}
 			break;
 		case CALIBRATION_STATUS::WHITE:
@@ -292,11 +257,17 @@ void do_ADC_calibration()
 			break;
 		case CALIBRATION_STATUS::WAIT:
 			calibration_status = CALIBRATION_STATUS::BLACK;
+			calibrationState = SensorUtils::CalibrationState::BLACK;
 			break;
 		case CALIBRATION_STATUS::BLACK:
 			calibration_status = CALIBRATION_STATUS::IDLE;
 			robot_status = ROBOT_STATUS::READY;
 		}
+		for (auto &sensor : sensor_board)
+		{
+			sensor.setCalibrationState(calibrationState);
+		}
+
 		go_to_next_calibration_phase = false;
 	}
 }
@@ -324,21 +295,21 @@ void do_PID_calculation()
 {
 	double left_engine_speed = IDLE_SPEED, right_engine_speed = IDLE_SPEED;
 
-	double equilibrium = (sensor_board[2].percentage + sensor_board[3].percentage) / 2;
+	double equilibrium = (sensor_board[2].getBlackPercentage() + sensor_board[3].getBlackPercentage()) / 2;
 
-	left_engine_speed += (sensor_board[2].percentage - equilibrium) * MID_MUL;
-	right_engine_speed += (sensor_board[3].percentage - equilibrium) * MID_MUL;
+	left_engine_speed += (sensor_board[2].getBlackPercentage() - equilibrium) * MID_MUL;
+	right_engine_speed += (sensor_board[3].getBlackPercentage() - equilibrium) * MID_MUL;
 
-	if (sensor_board[1].percentage > DOWN_SENSOR_BUFFER)
+	if (sensor_board[1].getBlackPercentage() > DOWN_SENSOR_BUFFER)
 	{
-		left_engine_speed -= sensor_board[1].percentage * INTER_MUL;
-		right_engine_speed += sensor_board[1].percentage * INTER_MUL;
+		left_engine_speed -= sensor_board[1].getBlackPercentage() * INTER_MUL;
+		right_engine_speed += sensor_board[1].getBlackPercentage() * INTER_MUL;
 	}
 
-	if (sensor_board[4].percentage > DOWN_SENSOR_BUFFER)
+	if (sensor_board[4].getBlackPercentage() > DOWN_SENSOR_BUFFER)
 	{
-		left_engine_speed += sensor_board[4].percentage * INTER_MUL;
-		right_engine_speed -= sensor_board[4].percentage * INTER_MUL;
+		left_engine_speed += sensor_board[4].getBlackPercentage() * INTER_MUL;
+		right_engine_speed -= sensor_board[4].getBlackPercentage() * INTER_MUL;
 	}
 
 	left_engine_debug = left_engine_speed;
