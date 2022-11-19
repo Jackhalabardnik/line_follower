@@ -10,72 +10,68 @@ using ::testing::AtLeast;
 using ::testing::InSequence;
 using ::testing::Return;
 
-TEST(sensor_tests, sensor_inits_analog_device) {
-  auto mock_analog_input =
+TEST(sensorTests, sensorInitsAnalogDevice) {
+  auto mockAnalogInput =
       std::unique_ptr<AnalogMockInput>(new AnalogMockInput());
-  EXPECT_CALL(*mock_analog_input, init()).Times(AtLeast(1));
+  EXPECT_CALL(*mockAnalogInput, init()).Times(AtLeast(1));
 
-  Sensor sensor(std::move(mock_analog_input));
+  Sensor sensor(std::move(mockAnalogInput));
   sensor.init();
 }
 
-TEST(sensor_tests, sensor_gathers_data_from_analog) {
-  constexpr int sensor_readings_num = SensorUtils::WINDOW_SIZE;
-  distribution value_distribution(SensorUtils::MIN_SENSOR_VALUE,
+TEST(sensorTests, sensorGathersDataFromAnalogAndDenoisesIt) {
+  randomDistribution valueDistribution(SensorUtils::MIN_SENSOR_VALUE,
                                   SensorUtils::MAX_SENSOR_VALUE);
-  std::vector<int> sensor_values;
+  std::vector<int> sensorValues;
 
-  for (int i = 0; i < sensor_readings_num; i++) {
-    sensor_values.push_back(value_distribution(rng));
+  for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) {
+    sensorValues.push_back(valueDistribution(randomGenerator));
   }
 
-  auto mock_analog_input =
+  auto mockAnalogInput =
       std::unique_ptr<AnalogMockInput>(new AnalogMockInput());
 
   InSequence s;
-  for (int i = 0; i <= sensor_readings_num; i++) {
-    EXPECT_CALL(*mock_analog_input, get_value())
-        .WillOnce(Return(sensor_values[i]))
+  for (int i = 0; i <= SensorUtils::WINDOW_SIZE; i++) {
+    EXPECT_CALL(*mockAnalogInput, getValue())
+        .WillOnce(Return(sensorValues[i]))
         .RetiresOnSaturation();
   }
 
-  Sensor sensor(std::move(mock_analog_input));
+  Sensor sensor(std::move(mockAnalogInput));
 
-  for (int i = 0; i <= sensor_readings_num; i++) {
-    sensor.measure_brightness();
+  for (int i = 0; i <= SensorUtils::WINDOW_SIZE; i++) {
+    sensor.measureBrightness();
     double expected_max_brightness =
-        *std::max_element(sensor_values.begin(), sensor_values.begin() + i + 1);
-    EXPECT_DOUBLE_EQ(sensor.get_denoised_value(), expected_max_brightness)
+        *std::max_element(sensorValues.begin(), sensorValues.begin() + i + 1);
+    EXPECT_DOUBLE_EQ(sensor.getDenoisedValue(), expected_max_brightness)
         << "Problem with iteration: " << i;
   }
 }
 
-TEST(sensor_tests, sensor_keeps_only_readings_in_a_window) {
-  constexpr int sensor_readings_to_generate = SensorUtils::WINDOW_SIZE - 1,
-                sensor_readings_to_loop = SensorUtils::WINDOW_SIZE + 1;
-
-  auto mock_analog_input =
+TEST(sensorTests, sensorKeepsOnlyReadingsFromWindow) {
+  auto mockAnalogInput =
       std::unique_ptr<AnalogMockInput>(new AnalogMockInput());
 
   InSequence s;
-  EXPECT_CALL(*mock_analog_input, get_value())
+  EXPECT_CALL(*mockAnalogInput, getValue())
       .WillOnce(Return(SensorUtils::MAX_SENSOR_VALUE))
       .RetiresOnSaturation();
 
-  for (int i = 0; i <= sensor_readings_to_generate; i++) {
-    EXPECT_CALL(*mock_analog_input, get_value())
+  for (int i = 0; i <= SensorUtils::WINDOW_SIZE - 1; i++) {
+    EXPECT_CALL(*mockAnalogInput, getValue())
         .WillOnce(Return(SensorUtils::MIN_SENSOR_VALUE))
         .RetiresOnSaturation();
   }
 
-  EXPECT_CALL(*mock_analog_input, get_value())
+  EXPECT_CALL(*mockAnalogInput, getValue())
       .WillOnce(Return(SensorUtils::MAX_SENSOR_VALUE - 1))
       .RetiresOnSaturation();
 
-  Sensor sensor(std::move(mock_analog_input));
+  Sensor sensor(std::move(mockAnalogInput));
 
-  for (int i = 0; i <= sensor_readings_to_loop; i++) {
-    sensor.measure_brightness();
+  for (int i = 0; i <= SensorUtils::WINDOW_SIZE + 1; i++) {
+    sensor.measureBrightness();
   }
-  EXPECT_EQ(sensor.get_denoised_value(), SensorUtils::MAX_SENSOR_VALUE - 1);
+  EXPECT_EQ(sensor.getDenoisedValue(), SensorUtils::MAX_SENSOR_VALUE - 1);
 }

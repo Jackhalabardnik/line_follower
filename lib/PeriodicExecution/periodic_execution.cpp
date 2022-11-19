@@ -8,9 +8,9 @@ namespace PeriodicExecution {
 
     void updateExecutions(std::vector<Routine> &routines) {
         std::for_each(routines.begin(), routines.end(), [](Routine &routine) {
-            if (millis() - routine.last_execution_time > routine.period || routine.last_execution_time > millis()) {
+            if (millis() - routine.lastExecutionTime > routine.period || routine.lastExecutionTime > millis()) {
                 routine.function();
-                routine.last_execution_time = millis();
+                routine.lastExecutionTime = millis();
             }
         });
     }

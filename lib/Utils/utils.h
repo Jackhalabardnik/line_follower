@@ -1,3 +1,5 @@
+#if(__cplusplus == 201103L)
+
 #include <type_traits>
 #include <memory>
 
@@ -7,3 +9,5 @@ make_unique(Args&&... args)
 {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+#endif

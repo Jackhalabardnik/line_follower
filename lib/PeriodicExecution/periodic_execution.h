@@ -11,7 +11,7 @@ namespace PeriodicExecution {
 
         void (*function)() = nullptr;
 
-        unsigned long last_execution_time = 0;
+        unsigned long lastExecutionTime = 0;
     };
 
     void updateExecutions(std::vector<Routine> &routines);

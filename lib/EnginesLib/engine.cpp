@@ -1,43 +1,43 @@
 #include "engine.h"
 
-Engine::Engine(int forward_pin, int backward_pin, int pwm_pin, int pwm_channel)
-    : forward_pin(forward_pin), backward_pin(backward_pin), pwm_pin(pwm_pin), pwm_channel(pwm_channel), pwm_level(0)
+Engine::Engine(int forwardPin, int backwardPin, int pwmPin, int pwmChannel)
+    : forwardPin(forwardPin), backwardPin(backwardPin), pwmPin(pwmPin), pwmChannel(pwmChannel), pwmLevel(0)
 {
 }
 
 void Engine::init()
 {
-    pinMode(forward_pin, OUTPUT);
-    digitalWrite(forward_pin, 0);
+    pinMode(forwardPin, OUTPUT);
+    digitalWrite(forwardPin, 0);
 
-    pinMode(backward_pin, OUTPUT);
-    digitalWrite(backward_pin, 0);
+    pinMode(backwardPin, OUTPUT);
+    digitalWrite(backwardPin, 0);
 
-    ledcAttachPin(pwm_pin, pwm_channel);
-    ledcSetup(pwm_channel, PWM_FREQUENCY, PWM_RESOLUTION);
-    ledcWrite(pwm_channel, pwm_level);
+    ledcAttachPin(pwmPin, pwmChannel);
+    ledcSetup(pwmChannel, PWM_FREQUENCY, PWM_RESOLUTION);
+    ledcWrite(pwmChannel, pwmLevel);
 }
 
-void Engine::set_speed(double pwm_percentage)
+void Engine::setSpeed(double pwmPercentage)
 {
-    pwm_percentage = pwm_percentage < 0 ? 0 : pwm_percentage;
-    pwm_percentage = pwm_percentage > 100 ? 100 : pwm_percentage;
+    pwmPercentage = pwmPercentage < 0 ? 0 : pwmPercentage;
+    pwmPercentage = pwmPercentage > 100 ? 100 : pwmPercentage;
 
-    if (pwm_level == 0 && pwm_percentage > 0)
+    if (pwmLevel == 0 && pwmPercentage > 0)
     {
-        digitalWrite(forward_pin, 1);
+        digitalWrite(forwardPin, 1);
     }
-    else if (pwm_level > 0 && pwm_percentage == 0)
+    else if (pwmLevel > 0 && pwmPercentage == 0)
     {
-        digitalWrite(forward_pin, 0);
+        digitalWrite(forwardPin, 0);
     }
 
-    pwm_level = (pwm_percentage / 100.0) * MAX_PWM_VALUE;
+    pwmLevel = (pwmPercentage / 100.0) * MAX_PWM_VALUE;
 
-    ledcWrite(pwm_channel, pwm_level);
+    ledcWrite(pwmChannel, pwmLevel);
 }
 
-int Engine::get_speed()
+int Engine::getSpeed()
 {
-    return double(pwm_level) / MAX_PWM_VALUE * 100;
+    return double(pwmLevel) / MAX_PWM_VALUE * 100;
 }

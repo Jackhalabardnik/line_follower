@@ -16,21 +16,21 @@ class Sensor
 {
 public:
 
-    Sensor(std::unique_ptr<AnalogInterface> &&analog_input);
+    Sensor(std::unique_ptr<AnalogInterface> &&analogInput);
 
     void init();
 
-    void measure_brightness();
+    void measureBrightness();
 
-    double get_brightness_percentage();
+    double getBrightnessPercentage();
 
-    double get_denoised_value();
+    double getDenoisedValue();
 
-    void set_calibration_state(SensorUtils::CalibrationState state);
+    void setCalibrationState(SensorUtils::CalibrationState state);
 
 private:
     double value = 0, min = SensorUtils::MIN_SENSOR_VALUE, max = SensorUtils::MAX_SENSOR_VALUE, percentage = 0;
     std::list<double> values;
-    std::unique_ptr<AnalogInterface> analog_input;
-    SensorUtils::CalibrationState calibration_state;
+    std::unique_ptr<AnalogInterface> analogInput;
+    SensorUtils::CalibrationState calibrationState;
 };

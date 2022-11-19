@@ -163,8 +163,8 @@ namespace
 	void stop_following()
 	{
 		robot_status = ROBOT_STATUS::READY;
-		left_engine.set_speed(0);
-		right_engine.set_speed(0);
+		left_engine.setSpeed(0);
+		right_engine.setSpeed(0);
 		left_engine_debug = 0;
 		right_engine_debug = 0;
 	}
@@ -217,7 +217,7 @@ void refresh_screen()
 		{
 			ss << std::round(sensor.percentage) << " ";
 		}
-		ss << "\nL: " << left_engine.get_speed() << " R: " << right_engine.get_speed() << "\n";
+		ss << "\nL: " << left_engine.getSpeed() << " R: " << right_engine.getSpeed() << "\n";
 		ss << "\nLD: " << left_engine_debug << " RD: " << right_engine_debug << "\n";
 	}
 
@@ -227,8 +227,8 @@ void refresh_screen()
 
 	// if (robot_status == ROBOT_STATUS::READY || robot_status == ROBOT_STATUS::FOLLOWING)
 	// {
-	// 	display.fillRect(1, 40, left_engine.get_speed(), 5);
-	// 	display.fillRect(1, 50, right_engine.get_speed(), 5);
+	// 	display.fillRect(1, 40, left_engine.getSpeed(), 5);
+	// 	display.fillRect(1, 50, right_engine.getSpeed(), 5);
 	// }
 
 	display.display();
@@ -264,7 +264,7 @@ void refresh_buttons()
 {
 	for (auto &button : buttons)
 	{
-		button.update_button();
+		button.updateButton();
 	}
 }
 
@@ -347,8 +347,8 @@ void do_PID_calculation()
 	bound_value(left_engine_speed, MIN_SPEED, MAX_SPEED);
 	bound_value(right_engine_speed, MIN_SPEED, MAX_SPEED);
 
-	left_engine.set_speed(left_engine_speed);
-	right_engine.set_speed(right_engine_speed);
+	left_engine.setSpeed(left_engine_speed);
+	right_engine.setSpeed(right_engine_speed);
 }
 
 void do_main_logic()

@@ -8,24 +8,24 @@ namespace Buttons
     class Button
     {
     public:
-        Button(int pin_number, std::function<void()> fall_callback);
+        Button(int pin_number, std::function<void()> fallCallback);
 
-        void update_button();
+        void updateButton();
 
         bool pressed();
 
     private:
         const int pin;
         int score = 0;
-        bool is_activated = false;
-        bool has_changed = false;
+        bool isActivated = false;
+        bool hasChanged = false;
 
-        std::function<void()> fall_callback;
+        std::function<void()> fallCallback;
     };
 
     // activation level: false - button is pressed when logic 0, true - button is
     // pressed when logic 1
-    constexpr bool activation_level = true;
+    constexpr bool activationLevel = true;
 
-    constexpr int button_max_score = 10, button_score_threshold = button_max_score / 2;
+    constexpr int buttonMaxScore = 10, buttonScoreThreshold = buttonMaxScore / 2;
 } // namespace Buttons

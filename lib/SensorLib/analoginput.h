@@ -3,10 +3,10 @@
 
 class AnalogInput : public AnalogInterface
 {
-    AnalogInput(int pin_number);
+    AnalogInput(int pinNumber);
 
     void init() override;
-    double get_value() override;
+    double getValue() override;
 private:
-    int analog_pin_number;
+    int analogPinNumber;
 };

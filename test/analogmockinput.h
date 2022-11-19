@@ -8,5 +8,5 @@ class AnalogMockInput : public AnalogInterface
 public:
     AnalogMockInput() {}
     MOCK_METHOD(void, init, (), (override));
-    MOCK_METHOD(double, get_value, (), (override));
+    MOCK_METHOD(double, getValue, (), (override));
 };

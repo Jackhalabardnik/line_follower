@@ -3,39 +3,39 @@
 namespace Buttons
 {
 
-    Button::Button(int pin_number, std::function<void()> fall_callback)
-        : pin(pin_number), fall_callback(fall_callback)
+    Button::Button(int pinNumber, std::function<void()> fallCallback)
+        : pin(pinNumber), fallCallback(fallCallback)
     {
         pinMode(pin, INPUT);
     }
 
-    void Button::update_button()
+    void Button::updateButton()
     {
-        bool is_pin_active = (digitalRead(pin) == activation_level);
+        bool isPinActive = (digitalRead(pin) == activationLevel);
 
-        if (is_pin_active && score < button_max_score)
+        if (isPinActive && score < buttonMaxScore)
         {
             score++;
         }
-        if (!is_pin_active && score > 0)
+        if (!isPinActive && score > 0)
         {
             score--;
         }
 
-        if (is_activated && score < button_score_threshold)
+        if (isActivated && score < buttonScoreThreshold)
         {
-            is_activated = false;
-            has_changed = true;
-            fall_callback();
+            isActivated = false;
+            hasChanged = true;
+            fallCallback();
         }
-        else if (score == button_max_score)
+        else if (score == buttonMaxScore)
         {
-            is_activated = true;
-            has_changed = true;
+            isActivated = true;
+            hasChanged = true;
         }
     }
 
     bool Button::pressed() {
-        return is_activated;
+        return isActivated;
     }
 }

@@ -3,29 +3,29 @@
 #include <algorithm>
 #include <cmath>
 
-Sensor::Sensor(std::unique_ptr<AnalogInterface> &&analog_input)
-    : analog_input(std::move(analog_input)) {}
+Sensor::Sensor(std::unique_ptr<AnalogInterface> &&analogInput)
+    : analogInput(std::move(analogInput)) {}
 
 void Sensor::init() {
-    analog_input->init();
+    analogInput->init();
 }
 
-void Sensor::measure_brightness() {
-    values.emplace_back(analog_input->get_value());
+void Sensor::measureBrightness() {
+    values.emplace_back(analogInput->getValue());
     if(values.size() > SensorUtils::WINDOW_SIZE) {
         values.pop_front();
     }
     value = *std::max_element(values.begin(), values.end());
 }
 
-double Sensor::get_brightness_percentage() {
+double Sensor::getBrightnessPercentage() {
     return -1;
 }
 
-double Sensor::get_denoised_value() {
+double Sensor::getDenoisedValue() {
     return value;
 }
 
-void Sensor::set_calibration_state(SensorUtils::CalibrationState state) {
+void Sensor::setCalibrationState(SensorUtils::CalibrationState state) {
 
 }

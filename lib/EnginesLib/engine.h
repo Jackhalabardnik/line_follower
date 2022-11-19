@@ -5,15 +5,15 @@ constexpr int PWM_RESOLUTION = 10, PWM_FREQUENCY = 1000, MAX_PWM_VALUE = 1 << PW
 class Engine
 {
 public:
-    Engine(int forward_pin, int backward_pin, int pwm_pin, int pwm_channel);
+    Engine(int forwardPin, int backwardPin, int pwmPin, int pwmChannel);
 
     void init();
 
-    void set_speed(double pwm_speed);
+    void setSpeed(double pwmPercentage);
 
-    int get_speed();
+    int getSpeed();
 
 private:
-    const int forward_pin, backward_pin, pwm_pin, pwm_channel;
-    int pwm_level;
+    const int forwardPin, backwardPin, pwmPin, pwmChannel;
+    int pwmLevel;
 };
