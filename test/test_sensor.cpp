@@ -205,17 +205,17 @@ TEST(sensorTests, sensorResetsCalibrationWhenCalibratingAgainForWhite)
 
   Sensor sensor(std::move(mockAnalogInput));
 
-  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE);
+  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE); // calibrate with mid value
 
   sensor.measureBlackLevel(); // read mid value
 
-  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE); // end calibration
 
-  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE);
+  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE); // calibrate with max value
 
   sensor.measureBlackLevel(); // read max value
 
-  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE); // end calibration
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move max value out of window
   {
@@ -248,7 +248,7 @@ TEST(sensorTests, sensorResetsCalibrationWhenCalibratingAgainForBlack)
 
   sensor.measureBlackLevel(); // read max value
 
-  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE); // end calibration
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE-1; i++) // move max value out of window
   {
@@ -259,9 +259,42 @@ TEST(sensorTests, sensorResetsCalibrationWhenCalibratingAgainForBlack)
 
   sensor.measureBlackLevel();
 
-  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE); // end calibration
 
   sensor.measureBlackLevel(); // read max value
 
   EXPECT_LT(sensor.getBlackPercentage(), maxBlackLevel);
+}
+
+TEST(sensorTests, sensorMinAndMaxEqual)
+{
+  constexpr double maxBlackLevel = 100,
+                   minBlackLevel = 0;
+  auto mockAnalogInput = std::make_unique<AnalogMockInput>();
+  InSequence s;
+  EXPECT_CALL(*mockAnalogInput, getValue())
+      .WillOnce(Return(SensorUtils::MAX_SENSOR_VALUE))
+      .WillOnce(Return(SensorUtils::MAX_SENSOR_VALUE))
+      .WillRepeatedly(Return(SensorUtils::MIN_SENSOR_VALUE));
+
+  Sensor sensor(std::move(mockAnalogInput));
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::BLACK); // calibrate with max value
+
+  sensor.measureBlackLevel(); // read max value
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE); // calibrate with max value
+
+  sensor.measureBlackLevel(); // read max value
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE); // end calibration
+
+  EXPECT_EQ(sensor.getBlackPercentage(), minBlackLevel);
+
+  for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move max value out of window
+  {
+    sensor.measureBlackLevel(); // read min value
+  }
+
+  EXPECT_EQ(sensor.getBlackPercentage(), maxBlackLevel);
 }

@@ -6,7 +6,7 @@
 
 Sensor::Sensor(std::unique_ptr<AnalogInterface> &&analogInput)
     : analogInput(std::move(analogInput)) {}
-    
+
 void Sensor::init() {
     analogInput->init();
 }
@@ -24,6 +24,11 @@ void Sensor::measureBlackLevel() {
 
     if(calibrationState == SensorUtils::CalibrationState::BLACK && value > min) {
         min = value;
+    }
+
+    if((calibrationState == SensorUtils::CalibrationState::WHITE || calibrationState == SensorUtils::CalibrationState::BLACK) && min == max) {
+        max = SensorUtils::MAX_SENSOR_VALUE;
+        min = SensorUtils::MIN_SENSOR_VALUE;
     } 
 
 }
