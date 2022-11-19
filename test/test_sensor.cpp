@@ -21,13 +21,12 @@ TEST(sensorTests, sensorInitsAnalogDevice)
 
 TEST(sensorTests, sensorGathersDataFromAnalogAndDenoisesIt)
 {
-  randomDistribution valueDistribution(SensorUtils::MIN_SENSOR_VALUE,
-                                       SensorUtils::MAX_SENSOR_VALUE);
   std::vector<int> sensorValues;
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++)
   {
-    sensorValues.push_back(valueDistribution(randomGenerator));
+    sensorValues.push_back(generate_random_number(SensorUtils::MIN_SENSOR_VALUE,
+                                                  SensorUtils::MAX_SENSOR_VALUE));
   }
 
   auto mockAnalogInput = std::make_unique<AnalogMockInput>();
