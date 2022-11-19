@@ -6,7 +6,7 @@
 
 namespace SensorUtils {
 
-constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, DOWN_SENSOR_BUFFER = 10, UP_SENSOR_BUFFER = 90, WINDOW_SIZE = 10;
+constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, WINDOW_SIZE = 10;
 
 enum class CalibrationState {NONE, WHITE, BLACK};
 

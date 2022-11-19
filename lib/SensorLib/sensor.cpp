@@ -1,4 +1,5 @@
 #include "sensor.h"
+#include "utils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -16,10 +17,21 @@ void Sensor::measureBrightness() {
         values.pop_front();
     }
     value = *std::max_element(values.begin(), values.end());
+
+    if(calibrationState == SensorUtils::CalibrationState::WHITE && value < max) {
+        max = value;
+    } 
+
+    if(calibrationState == SensorUtils::CalibrationState::BLACK && value > min) {
+        min = value;
+    } 
+
 }
 
 double Sensor::getBrightnessPercentage() {
-    return -1;
+    auto percentage = 100.0 - ((value - min) / (max - min)) * 100.0;
+    bound_value(percentage, 0.0, 100.0);
+    return percentage;
 }
 
 double Sensor::getDenoisedValue() {
@@ -27,5 +39,5 @@ double Sensor::getDenoisedValue() {
 }
 
 void Sensor::setCalibrationState(SensorUtils::CalibrationState state) {
-
+    calibrationState = state;
 }
