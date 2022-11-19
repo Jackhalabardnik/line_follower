@@ -20,9 +20,9 @@ public:
 
     void init();
 
-    void measureBrightness();
+    void measureBlackLevel();
 
-    double getBrightnessPercentage();
+    double getBlackPercentage();
 
     double getDenoisedValue();
 

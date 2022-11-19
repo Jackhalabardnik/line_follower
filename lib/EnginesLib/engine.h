@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
 constexpr int PWM_RESOLUTION = 10, PWM_FREQUENCY = 1000, MAX_PWM_VALUE = 1 << PWM_RESOLUTION;
 

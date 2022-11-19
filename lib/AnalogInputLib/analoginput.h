@@ -1,5 +1,6 @@
 #pragma once
 #include "analoginterface.h"
+#include <Arduino.h>
 
 class AnalogInput : public AnalogInterface
 {

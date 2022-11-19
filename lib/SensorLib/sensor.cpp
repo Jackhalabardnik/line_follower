@@ -11,7 +11,7 @@ void Sensor::init() {
     analogInput->init();
 }
 
-void Sensor::measureBrightness() {
+void Sensor::measureBlackLevel() {
     values.emplace_back(analogInput->getValue());
     if(values.size() > SensorUtils::WINDOW_SIZE) {
         values.pop_front();
@@ -28,7 +28,7 @@ void Sensor::measureBrightness() {
 
 }
 
-double Sensor::getBrightnessPercentage() {
+double Sensor::getBlackPercentage() {
     auto percentage = 100.0 - ((value - min) / (max - min)) * 100.0;
     bound_value(percentage, 0.0, 100.0);
     return percentage;
@@ -40,4 +40,9 @@ double Sensor::getDenoisedValue() {
 
 void Sensor::setCalibrationState(SensorUtils::CalibrationState state) {
     calibrationState = state;
+    if(state == SensorUtils::CalibrationState::WHITE) {
+        max = SensorUtils::MAX_SENSOR_VALUE;
+    } else if(state == SensorUtils::CalibrationState::BLACK) {
+        min = SensorUtils::MIN_SENSOR_VALUE;
+    }
 }

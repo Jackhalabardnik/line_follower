@@ -44,7 +44,7 @@ TEST(sensorTests, sensorGathersDataFromAnalogAndDenoisesIt)
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++)
   {
-    sensor.measureBrightness();
+    sensor.measureBlackLevel();
     double expected_max_brightness =
         *std::max_element(sensorValues.begin(), sensorValues.begin() + i + 1);
     EXPECT_DOUBLE_EQ(sensor.getDenoisedValue(), expected_max_brightness)
@@ -71,7 +71,7 @@ TEST(sensorTests, sensorKeepsOnlyReadingsFromWindow)
 
   for (int i = 0; i <= SensorUtils::WINDOW_SIZE + 1; i++)
   {
-    sensor.measureBrightness();
+    sensor.measureBlackLevel();
   }
   EXPECT_EQ(sensor.getDenoisedValue(), SensorUtils::MAX_SENSOR_VALUE - 1);
 }
@@ -81,8 +81,8 @@ TEST(sensorTests, sensorIsCalibratingWhite)
   constexpr double maxSensorReading = SensorUtils::MAX_SENSOR_VALUE,
                    midSensorReading = SensorUtils::MAX_SENSOR_VALUE * 0.9,
                    smallSensorReading = SensorUtils::MAX_SENSOR_VALUE * 0.8,
-                   maxBrightness = 0,
-                   midBrightness = 100.0 - (smallSensorReading - SensorUtils::MIN_SENSOR_VALUE) / (midSensorReading - SensorUtils::MIN_SENSOR_VALUE) * 100.0;
+                   minBlackLevel = 0,
+                   midBlackLevel = 100.0 - (smallSensorReading - SensorUtils::MIN_SENSOR_VALUE) / (midSensorReading - SensorUtils::MIN_SENSOR_VALUE) * 100.0;
   auto mockAnalogInput = std::make_unique<AnalogMockInput>();
   InSequence s;
   EXPECT_CALL(*mockAnalogInput, getValue())
@@ -104,33 +104,33 @@ TEST(sensorTests, sensorIsCalibratingWhite)
 
   sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE);
 
-  sensor.measureBrightness(); // read max value
+  sensor.measureBlackLevel(); // read max value
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), maxBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), minBlackLevel);
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move max value out of window
   {
-    sensor.measureBrightness(); // read mid value
+    sensor.measureBlackLevel(); // read mid value
   }
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), maxBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), minBlackLevel);
 
   sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move mid value out of window
   {
-    sensor.measureBrightness(); // read small value
+    sensor.measureBlackLevel(); // read small value
   }
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), midBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), midBlackLevel);
 
-  sensor.measureBrightness(); // read mid value
+  sensor.measureBlackLevel(); // read mid value
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), maxBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), minBlackLevel);
 
-  sensor.measureBrightness(); // read max value
+  sensor.measureBlackLevel(); // read max value
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), maxBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), minBlackLevel);
 }
 
 TEST(sensorTests, sensorIsCalibratingBlack)
@@ -138,8 +138,8 @@ TEST(sensorTests, sensorIsCalibratingBlack)
   constexpr double maxSensorReading = 500,
                    midSensorReading = 200,
                    smallSensorReading = 100,
-                   minBrightness = 100,
-                   midBrightness = 100.0 - (maxSensorReading - midSensorReading) / (SensorUtils::MAX_SENSOR_VALUE - midSensorReading) * 100.0;
+                   maxBlackLevel = 100,
+                   midBlackLevel = 100.0 - (maxSensorReading - midSensorReading) / (SensorUtils::MAX_SENSOR_VALUE - midSensorReading) * 100.0;
   auto mockAnalogInput = std::make_unique<AnalogMockInput>();
   InSequence s;
   EXPECT_CALL(*mockAnalogInput, getValue())
@@ -159,31 +159,109 @@ TEST(sensorTests, sensorIsCalibratingBlack)
 
   sensor.setCalibrationState(SensorUtils::CalibrationState::BLACK);
 
-  sensor.measureBrightness(); // read small value
+  sensor.measureBlackLevel(); // read small value
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), minBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), maxBlackLevel);
 
-  sensor.measureBrightness(); // read mid value
+  sensor.measureBlackLevel(); // read mid value
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), minBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), maxBlackLevel);
 
   sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
 
-  sensor.measureBrightness(); // read max value
+  sensor.measureBlackLevel(); // read max value
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), midBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), midBlackLevel);
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move max value out of window
   {
-    sensor.measureBrightness(); // read mid value
+    sensor.measureBlackLevel(); // read mid value
   }
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), minBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), maxBlackLevel);
 
   for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move mid value out of window
   {
-    sensor.measureBrightness(); // read small value
+    sensor.measureBlackLevel(); // read small value
   }
 
-  EXPECT_DOUBLE_EQ(sensor.getBrightnessPercentage(), minBrightness);
+  EXPECT_DOUBLE_EQ(sensor.getBlackPercentage(), maxBlackLevel);
+}
+
+TEST(sensorTests, sensorResetsCalibrationWhenCalibratingAgainForWhite)
+{
+  constexpr double maxSensorReading = SensorUtils::MAX_SENSOR_VALUE * 0.9,
+                   midSensorReading = SensorUtils::MAX_SENSOR_VALUE * 0.8,
+                   minBlackLevel = 0;
+  auto mockAnalogInput = std::make_unique<AnalogMockInput>();
+  InSequence s;
+  EXPECT_CALL(*mockAnalogInput, getValue())
+      .WillOnce(Return(midSensorReading))
+      .WillOnce(Return(maxSensorReading));
+
+  EXPECT_CALL(*mockAnalogInput, getValue())
+      .Times(SensorUtils::WINDOW_SIZE)
+      .WillRepeatedly(Return(midSensorReading));
+
+  Sensor sensor(std::move(mockAnalogInput));
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE);
+
+  sensor.measureBlackLevel(); // read mid value
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::WHITE);
+
+  sensor.measureBlackLevel(); // read max value
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+
+  for (int i = 0; i < SensorUtils::WINDOW_SIZE; i++) // move max value out of window
+  {
+    sensor.measureBlackLevel(); // read mid value
+  }
+
+  EXPECT_GT(sensor.getBlackPercentage(), minBlackLevel);
+}
+
+TEST(sensorTests, sensorResetsCalibrationWhenCalibratingAgainForBlack)
+{
+  constexpr double maxSensorReading = SensorUtils::MAX_SENSOR_VALUE * 0.9,
+                   midSensorReading = SensorUtils::MAX_SENSOR_VALUE * 0.8,
+                   maxBlackLevel = 100;
+  auto mockAnalogInput = std::make_unique<AnalogMockInput>();
+  InSequence s;
+  EXPECT_CALL(*mockAnalogInput, getValue())
+      .WillOnce(Return(maxSensorReading));
+
+  EXPECT_CALL(*mockAnalogInput, getValue())
+      .Times(SensorUtils::WINDOW_SIZE)
+      .WillRepeatedly(Return(midSensorReading));
+
+  EXPECT_CALL(*mockAnalogInput, getValue())
+      .WillOnce(Return(maxSensorReading));
+
+  Sensor sensor(std::move(mockAnalogInput));
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::BLACK); // calibrate with max value
+
+  sensor.measureBlackLevel(); // read max value
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+
+  for (int i = 0; i < SensorUtils::WINDOW_SIZE-1; i++) // move max value out of window
+  {
+    sensor.measureBlackLevel(); // read mid value
+  }
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::BLACK); // calibrate with mid value
+
+  sensor.measureBlackLevel();
+
+  sensor.setCalibrationState(SensorUtils::CalibrationState::NONE);
+
+  sensor.measureBlackLevel(); // read max value
+
+  EXPECT_LT(sensor.getBlackPercentage(), maxBlackLevel);
 }
