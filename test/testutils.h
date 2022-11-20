@@ -2,7 +2,4 @@
 
 #include <random>
 
-using randomDistribution = std::uniform_int_distribution<std::mt19937::result_type>;
-
-std::random_device dev;
-std::mt19937 randomGenerator(dev());
+double generate_random_number(int right_cap, int left_cap);
