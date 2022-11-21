@@ -54,17 +54,17 @@ RobotEngineSpeed RobotPID::calculatePID(std::vector<double> sensor_values)
     }
     else
     {
-        if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
-        {
-            proportional = sensor_values[0] * PIDRatios::OUTER_MUL * -1;
-        }
-        else if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
+        if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {
             proportional = sensor_values[1] * PIDRatios::INTER_MUL * -1;
         }
         else if (sensor_values[4] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {
             proportional = sensor_values[4] * PIDRatios::INTER_MUL;
+        }
+        else if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
+        {
+            proportional = sensor_values[0] * PIDRatios::OUTER_MUL * -1;
         }
         else if (sensor_values[5] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {

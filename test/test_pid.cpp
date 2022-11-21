@@ -34,7 +34,7 @@ TEST(PIDTests, AdjustSpeedForMiddleSensors) {
 TEST(PIDTests, AdjustSpeedForInterSensors) {
     constexpr double startingSpeed = 50;
 
-    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER, PIDRatios::UP_SENSOR_BUFFER);
+    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
     double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::INTER_MUL,
            expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::INTER_MUL;
@@ -60,7 +60,7 @@ TEST(PIDTests, AdjustSpeedForInterSensors) {
 TEST(PIDTests, AdjustSpeedForOuterSensors) {
     constexpr double startingSpeed = 50;
 
-    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER, PIDRatios::UP_SENSOR_BUFFER);
+    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
     double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::OUTER_MUL,
            expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::OUTER_MUL;
@@ -87,7 +87,7 @@ TEST(PIDTests, NoSpeedChange) {
     constexpr double startingSpeed = 50;
     constexpr RobotEngineSpeed expectedData = {startingSpeed, startingSpeed};
 
-    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER, PIDRatios::UP_SENSOR_BUFFER);
+    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
     {
         RobotPID pid(startingSpeed, 100, 0);
@@ -158,7 +158,7 @@ TEST(PIDTests, AdjustSpeedForMiddleSensorsOmnitOtherData) {
 TEST(PIDTests, AdjustSpeedForInterSensorsWhenOutroInfo) {
     constexpr double startingSpeed = 50;
 
-    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER, PIDRatios::UP_SENSOR_BUFFER);
+    double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
     double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::INTER_MUL,
            expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::INTER_MUL;

@@ -3,20 +3,20 @@
 
 #include <SSD1306Wire.h>
 
-void init_devices();
+void initDevices();
 
-void refresh_screen();
+void refreshAdc();
 
-void refresh_adc();
+void refreshButtons();
 
-void refresh_buttons();
+void doMainLogic();
 
-void do_ADC_calibration();
+void refreshScreen();
 
-void check_move_mode();
+void checkCalibrationStatus();
 
-void do_PID_calculation();
+void checkRobotStatus();
 
-void do_main_logic();
+void calculatePID();
 
-void do_ADC_debug();
+void debugADC();
