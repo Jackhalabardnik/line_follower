@@ -25,7 +25,7 @@ constexpr int SAFE_BUFFER = 200;
 
 constexpr double MAX_SPEED = 100, MIN_SPEED = 40, STARTING_SPEED = 70.0;
 
-enum class CALIBRATION_STATUS
+enum class CalibrationStatus
 {
     IDLE,
     WHITE,
@@ -33,7 +33,7 @@ enum class CALIBRATION_STATUS
     BLACK
 };
 
-enum class ROBOT_STATUS
+enum class RobotStatus
 {
     UNCALIBRATED,
     CALIBRATION,
@@ -41,40 +41,40 @@ enum class ROBOT_STATUS
     FOLLOWING
 };
 
-std::ostream &operator<<(std::ostream &os, const ROBOT_STATUS &status)
+std::ostream &operator<<(std::ostream &os, const RobotStatus &status)
 {
     switch (status)
     {
-    case ROBOT_STATUS::UNCALIBRATED:
+    case RobotStatus::UNCALIBRATED:
         os << "UNCALIBRATED";
         break;
-    case ROBOT_STATUS::CALIBRATION:
+    case RobotStatus::CALIBRATION:
         os << "CALIBRATION...";
         break;
-    case ROBOT_STATUS::READY:
+    case RobotStatus::READY:
         os << "READY";
         break;
-    case ROBOT_STATUS::FOLLOWING:
+    case RobotStatus::FOLLOWING:
         os << "FOLLOWING";
         break;
     }
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const CALIBRATION_STATUS &status)
+std::ostream &operator<<(std::ostream &os, const CalibrationStatus &status)
 {
     switch (status)
     {
-    case CALIBRATION_STATUS::IDLE:
+    case CalibrationStatus::IDLE:
         os << "IDLE";
         break;
-    case CALIBRATION_STATUS::WHITE:
+    case CalibrationStatus::WHITE:
         os << "WHITE CALIBRATION";
         break;
-    case CALIBRATION_STATUS::WAIT:
+    case CalibrationStatus::WAIT:
         os << "MOVE TO BLACK";
         break;
-    case CALIBRATION_STATUS::BLACK:
+    case CalibrationStatus::BLACK:
         os << "BLACK CALIBRATION";
         break;
     }

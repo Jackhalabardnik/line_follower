@@ -11,8 +11,8 @@
 
 namespace
 {
-	CALIBRATION_STATUS calibrationStatus = CALIBRATION_STATUS::IDLE;
-	ROBOT_STATUS robotStatus = ROBOT_STATUS::UNCALIBRATED;
+	CalibrationStatus calibrationStatus = CalibrationStatus::IDLE;
+	RobotStatus robotStatus = RobotStatus::UNCALIBRATED;
 
 	SSD1306Wire display(0x3c, SDA, SCL);
 
@@ -21,7 +21,7 @@ namespace
 	RobotPID robotPID(STARTING_SPEED, MAX_SPEED, MIN_SPEED);
 
 	Engine leftEngine(FORWARD_LEFT_ENGINE_PIN, BACKWARD_LEFT_ENGINE_PIN, PWM_LEFT_ENGINE_PIN, LEFT_ENGINE_PWM_CHANNEL),
-		rightEngine(FORWARD_RIGHT_ENGINE_PIN, BACKWARD_RIGHT_ENGINE_PIN, PWM_RIGHT_ENGINE_PIN, RIGHT_ENGINE_PWM_CHANNEL);
+		   rightEngine(FORWARD_RIGHT_ENGINE_PIN, BACKWARD_RIGHT_ENGINE_PIN, PWM_RIGHT_ENGINE_PIN, RIGHT_ENGINE_PWM_CHANNEL);
 
 	int safeBufferValue = 0;
 
@@ -63,12 +63,12 @@ namespace
 
 	void startFollowing()
 	{
-		robotStatus = ROBOT_STATUS::FOLLOWING;
+		robotStatus = RobotStatus::FOLLOWING;
 	}
 
 	void stopFollowing()
 	{
-		robotStatus = ROBOT_STATUS::READY;
+		robotStatus = RobotStatus::READY;
 		leftEngine.setSpeed(0);
 		rightEngine.setSpeed(0);
 	}
@@ -118,7 +118,7 @@ void doMainLogic()
 {
 	checkCalibrationStatus();
 	checkRobotStatus();
-	if (robotStatus == ROBOT_STATUS::FOLLOWING)
+	if (robotStatus == RobotStatus::FOLLOWING)
 	{
 		calculatePID();
 		checkSafeBuffer();
@@ -129,14 +129,14 @@ void refreshScreen()
 {
 	std::stringstream ss;
 
-	if (robotStatus == ROBOT_STATUS::CALIBRATION)
+	if (robotStatus == RobotStatus::CALIBRATION)
 	{
 		ss << calibrationStatus << "\n";
 	}
 
 	ss << "Status: " << robotStatus << "\n";
 
-	if (robotStatus == ROBOT_STATUS::READY || robotStatus == ROBOT_STATUS::FOLLOWING)
+	if (robotStatus == RobotStatus::READY || robotStatus == RobotStatus::FOLLOWING)
 	{
 		for (auto &sensor : sensorBoard)
 		{
@@ -159,24 +159,24 @@ void checkCalibrationStatus()
 		auto calibrationState = SensorUtils::CalibrationState::NONE;
 		switch (calibrationStatus)
 		{
-		case CALIBRATION_STATUS::IDLE:
-			if (robotStatus == ROBOT_STATUS::UNCALIBRATED || robotStatus == ROBOT_STATUS::READY)
+		case CalibrationStatus::IDLE:
+			if (robotStatus == RobotStatus::UNCALIBRATED || robotStatus == RobotStatus::READY)
 			{
-				calibrationStatus = CALIBRATION_STATUS::WHITE;
-				robotStatus = ROBOT_STATUS::CALIBRATION;
+				calibrationStatus = CalibrationStatus::WHITE;
+				robotStatus = RobotStatus::CALIBRATION;
 				calibrationState = SensorUtils::CalibrationState::WHITE;
 			}
 			break;
-		case CALIBRATION_STATUS::WHITE:
-			calibrationStatus = CALIBRATION_STATUS::WAIT;
+		case CalibrationStatus::WHITE:
+			calibrationStatus = CalibrationStatus::WAIT;
 			break;
-		case CALIBRATION_STATUS::WAIT:
-			calibrationStatus = CALIBRATION_STATUS::BLACK;
+		case CalibrationStatus::WAIT:
+			calibrationStatus = CalibrationStatus::BLACK;
 			calibrationState = SensorUtils::CalibrationState::BLACK;
 			break;
-		case CALIBRATION_STATUS::BLACK:
-			calibrationStatus = CALIBRATION_STATUS::IDLE;
-			robotStatus = ROBOT_STATUS::READY;
+		case CalibrationStatus::BLACK:
+			calibrationStatus = CalibrationStatus::IDLE;
+			robotStatus = RobotStatus::READY;
 		}
 		
 		for (auto &sensor : sensorBoard)
@@ -194,13 +194,13 @@ void checkRobotStatus()
 	{
 		switch (robotStatus)
 		{
-		case ROBOT_STATUS::UNCALIBRATED:
-		case ROBOT_STATUS::CALIBRATION:
+		case RobotStatus::UNCALIBRATED:
+		case RobotStatus::CALIBRATION:
 			break;
-		case ROBOT_STATUS::READY:
+		case RobotStatus::READY:
 			startFollowing();
 			break;
-		case ROBOT_STATUS::FOLLOWING:
+		case RobotStatus::FOLLOWING:
 			stopFollowing();
 		}
 		goToNextMoveMode = false;
