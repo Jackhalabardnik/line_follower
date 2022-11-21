@@ -22,9 +22,9 @@ public:
 
     void measureBlackLevel();
 
-    double getBlackPercentage();
+    double getBlackPercentage() const;
 
-    double getDenoisedValue();
+    double getDenoisedValue() const;
 
     void setCalibrationState(SensorUtils::CalibrationState state);
 

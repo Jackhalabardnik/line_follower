@@ -3,12 +3,10 @@
 #include "engine.h"
 #include "sensor.h"
 #include "analoginput.h"
-#include "utils.h"
+#include "robotpid.cpp"
 
 #include <sstream>
 #include <iomanip>
-#include <list>
-#include <vector>
 #include <numeric>
 
 namespace
@@ -37,7 +35,7 @@ namespace
 
 	constexpr int SAFE_BUFFER = 200;
 
-	constexpr double MAX_SPEED = 60, MIN_SPEED = 0, IDLE_SPEED = 40.0;
+	constexpr double MAX_SPEED = 100, MIN_SPEED = 40, IDLE_SPEED = 40.0;
 
 	constexpr double MID_MUL = 0.2, INTER_MUL = 2;
 
@@ -63,6 +61,8 @@ namespace
 	SSD1306Wire display(0x3c, SDA, SCL);
 
 	std::vector<Sensor> sensor_board = {};
+
+	RobotPID robotPID(IDLE_SPEED, MAX_SPEED, MIN_SPEED);
 
 	Engine left_engine(FORWARD_LEFT_ENGINE_PIN, BACKWARD_LEFT_ENGINE_PIN, PWM_LEFT_ENGINE_PIN, LEFT_ENGINE_PWM_CHANNEL),
 		right_engine(FORWARD_RIGHT_ENGINE_PIN, BACKWARD_RIGHT_ENGINE_PIN, PWM_RIGHT_ENGINE_PIN, RIGHT_ENGINE_PWM_CHANNEL);
@@ -212,12 +212,6 @@ void refresh_screen()
 
 	display.drawString(1, 1, ss.str().c_str());
 
-	// if (robot_status == ROBOT_STATUS::READY || robot_status == ROBOT_STATUS::FOLLOWING)
-	// {
-	// 	display.fillRect(1, 40, left_engine.getSpeed(), 5);
-	// 	display.fillRect(1, 50, right_engine.getSpeed(), 5);
-	// }
-
 	display.display();
 }
 
@@ -293,33 +287,13 @@ void check_move_mode()
 
 void do_PID_calculation()
 {
-	double left_engine_speed = IDLE_SPEED, right_engine_speed = IDLE_SPEED;
-
-	double equilibrium = (sensor_board[2].getBlackPercentage() + sensor_board[3].getBlackPercentage()) / 2;
-
-	left_engine_speed += (sensor_board[2].getBlackPercentage() - equilibrium) * MID_MUL;
-	right_engine_speed += (sensor_board[3].getBlackPercentage() - equilibrium) * MID_MUL;
-
-	if (sensor_board[1].getBlackPercentage() > DOWN_SENSOR_BUFFER)
-	{
-		left_engine_speed -= sensor_board[1].getBlackPercentage() * INTER_MUL;
-		right_engine_speed += sensor_board[1].getBlackPercentage() * INTER_MUL;
+	std::vector<double> percentages;
+	for(const auto &sensor: sensor_board) {
+		percentages.emplace_back(sensor.getBlackPercentage());
 	}
-
-	if (sensor_board[4].getBlackPercentage() > DOWN_SENSOR_BUFFER)
-	{
-		left_engine_speed += sensor_board[4].getBlackPercentage() * INTER_MUL;
-		right_engine_speed -= sensor_board[4].getBlackPercentage() * INTER_MUL;
-	}
-
-	left_engine_debug = left_engine_speed;
-	right_engine_debug = right_engine_speed;
-
-	bound_value(left_engine_speed, MIN_SPEED, MAX_SPEED);
-	bound_value(right_engine_speed, MIN_SPEED, MAX_SPEED);
-
-	left_engine.setSpeed(left_engine_speed);
-	right_engine.setSpeed(right_engine_speed);
+	auto velocities = robotPID.calculatePID(percentages);
+	left_engine.setSpeed(velocities.leftEngineSpeed);
+	right_engine.setSpeed(velocities.rightEngineSpeed);
 }
 
 void do_main_logic()

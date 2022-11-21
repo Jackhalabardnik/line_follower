@@ -33,13 +33,13 @@ void Sensor::measureBlackLevel() {
 
 }
 
-double Sensor::getBlackPercentage() {
+double Sensor::getBlackPercentage() const{
     auto percentage = 100.0 - ((value - min) / (max - min)) * 100.0;
     bound_value(percentage, 0.0, 100.0);
     return percentage;
 }
 
-double Sensor::getDenoisedValue() {
+double Sensor::getDenoisedValue() const{
     return value;
 }
 

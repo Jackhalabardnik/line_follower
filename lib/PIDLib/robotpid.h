@@ -4,7 +4,7 @@
 namespace PIDRatios {
     constexpr double  DOWN_SENSOR_BUFFER = 10, 
                       UP_SENSOR_BUFFER = 90,
-                      MID_MUL = 0.4,
+                      MID_MUL = 0.05,
                       INTER_MUL = 1,
                       OUTER_MUL = 2;
 }
