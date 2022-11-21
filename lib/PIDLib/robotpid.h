@@ -4,9 +4,10 @@
 namespace PIDRatios {
     constexpr double  DOWN_SENSOR_BUFFER = 10, 
                       UP_SENSOR_BUFFER = 90,
-                      MID_MUL = 0.05,
-                      INTER_MUL = 1,
-                      OUTER_MUL = 2;
+                      PROPORTIONAL_MID_MUL = 0.005,
+                      PROPORTIONAL_INTER_MUL = 1,
+                      PROPORTIONAL_OUTER_MUL = 2,
+                      INTEGRAL_MUL = 1;
 }
 
 struct RobotEngineSpeed
@@ -22,5 +23,5 @@ public:
 private:
 
     const double maxEngineSpeed, minEngineSpeed;
-    double leftEngineSpeed, rightEngineSpeed;
+    double leftEngineSpeed, rightEngineSpeed, leftIntegralPart = 0, rightIntegralPart = 0;
 };
