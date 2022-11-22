@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 double middleMean(double left, double right) {
-    return (left+right)/2 * PIDRatios::PROPORTIONAL_MID_MUL;
+    return (left+right)/2 * PIDRatios::MIDDLE_MUL;
 }
 
 TEST(PIDTests, AdjustSpeedForMiddleSensors) {
@@ -36,8 +36,8 @@ TEST(PIDTests, AdjustSpeedForInterSensors) {
 
     double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
-    double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::PROPORTIONAL_INTER_MUL,
-           expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::PROPORTIONAL_INTER_MUL;
+    double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::INTER_MUL,
+           expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::INTER_MUL;
 
     bound_value(expectedHigerSpeed, 0.0, 100.0);
     bound_value(expectedLowerSpeed, 0.0, 100.0);
@@ -62,8 +62,8 @@ TEST(PIDTests, AdjustSpeedForOuterSensors) {
 
     double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
-    double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::PROPORTIONAL_OUTER_MUL,
-           expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::PROPORTIONAL_OUTER_MUL;
+    double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::OUTER_MUL,
+           expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::OUTER_MUL;
 
     bound_value(expectedHigerSpeed, 0.0, 100.0);
     bound_value(expectedLowerSpeed, 0.0, 100.0);
@@ -160,8 +160,8 @@ TEST(PIDTests, AdjustSpeedForInterSensorsWhenOutroInfo) {
 
     double sensorValue = generate_random_number(PIDRatios::DOWN_SENSOR_BUFFER+1, PIDRatios::UP_SENSOR_BUFFER-1);
 
-    double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::PROPORTIONAL_INTER_MUL,
-           expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::PROPORTIONAL_INTER_MUL;
+    double expectedHigerSpeed = startingSpeed + sensorValue*PIDRatios::INTER_MUL,
+           expectedLowerSpeed = startingSpeed - sensorValue*PIDRatios::INTER_MUL;
 
     bound_value(expectedHigerSpeed, 0.0, 100.0);
     bound_value(expectedLowerSpeed, 0.0, 100.0);

@@ -4,10 +4,11 @@
 namespace PIDRatios {
     constexpr double  DOWN_SENSOR_BUFFER = 10, 
                       UP_SENSOR_BUFFER = 90,
-                      PROPORTIONAL_MID_MUL = 0.005,
-                      PROPORTIONAL_INTER_MUL = 1,
-                      PROPORTIONAL_OUTER_MUL = 2,
-                      INTEGRAL_MUL = 1;
+                      MIDDLE_MUL = 1,
+                      INTER_MUL = 2,
+                      OUTER_MUL = 3,
+                      PROPORTIONAL_MUL = 0.3,
+                      INTEGRAL_MUL = 0.01;
 }
 
 struct RobotEngineSpeed
@@ -22,6 +23,6 @@ public:
     RobotEngineSpeed calculatePID(std::vector<double> sensor_values);
 private:
 
-    const double maxEngineSpeed, minEngineSpeed;
-    double leftEngineSpeed, rightEngineSpeed, leftIntegralPart = 0, rightIntegralPart = 0;
+    const double maxEngineSpeed, minEngineSpeed, idleEngineSpeed;
+    double integralPart = 0;
 };

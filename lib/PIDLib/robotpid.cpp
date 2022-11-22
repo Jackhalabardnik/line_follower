@@ -6,8 +6,7 @@
 RobotPID::RobotPID(double startEngineSpeed, double maxEngineSpeed, double minEngineSpeed)
     : maxEngineSpeed(maxEngineSpeed),
       minEngineSpeed(minEngineSpeed),
-      leftEngineSpeed(startEngineSpeed),
-      rightEngineSpeed(startEngineSpeed) {}
+      idleEngineSpeed(startEngineSpeed) {}
 
 RobotEngineSpeed RobotPID::calculatePID(std::vector<double> sensor_values)
 {
@@ -39,51 +38,54 @@ RobotEngineSpeed RobotPID::calculatePID(std::vector<double> sensor_values)
         || (are_middle_sensors_white && (are_inter_sensor_both_dark || are_outer_sensor_both_dark)) 
         || (!are_middle_sensors_dark && !are_middle_sensors_white && are_middle_sensors_close))
     {
-        return {leftEngineSpeed, rightEngineSpeed};
+        return {idleEngineSpeed, idleEngineSpeed};
     }
 
     double error = 0;
-    double proportional_multiplier = 0;
 
-    if (sensor_values[2] > 0 || sensor_values[3] > 0)
+    if (sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER || sensor_values[3] > PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        error = (sensor_values[2] + sensor_values[3]) / 2;
-        proportional_multiplier = PIDRatios::PROPORTIONAL_MID_MUL;
+        if(sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER && sensor_values[3] > PIDRatios::DOWN_SENSOR_BUFFER)
+        {
+            error = (sensor_values[2] + sensor_values[3]) / 2;
+        } 
+        else 
+        {
+            error = sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER ? sensor_values[2] : sensor_values[3];
+        }
         if (sensor_values[2] > sensor_values[3])
         {
             error *= -1;
         }
+        error *= PIDRatios::MIDDLE_MUL;
     }
     else
     {
         if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {
-            error = sensor_values[1];
-            proportional_multiplier = PIDRatios::PROPORTIONAL_INTER_MUL * -1;
+            error = sensor_values[1] * PIDRatios::INTER_MUL * -1;
         }
         else if (sensor_values[4] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {
-            error = sensor_values[4];
-            proportional_multiplier = PIDRatios::PROPORTIONAL_INTER_MUL;
+            error = sensor_values[4] * PIDRatios::INTER_MUL;
         }
         else if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {
-            error = sensor_values[0];
-            proportional_multiplier = PIDRatios::PROPORTIONAL_OUTER_MUL * -1;
+            error = sensor_values[0] * PIDRatios::OUTER_MUL * -1;
         }
         else if (sensor_values[5] >= PIDRatios::DOWN_SENSOR_BUFFER)
         {
-            error = sensor_values[5];
-            proportional_multiplier = PIDRatios::PROPORTIONAL_OUTER_MUL;
+            error = sensor_values[5] * PIDRatios::OUTER_MUL;
         }
     }
 
-    double proportional_part = error * proportional_multiplier;
-    leftIntegralPart += error;
-    rightIntegralPart -= error;
+    double proportionalPart = error * PIDRatios::PROPORTIONAL_MUL;
+    integralPart += error;
 
-    leftEngineSpeed += proportional_part + (leftIntegralPart*PIDRatios::INTEGRAL_MUL);
-    rightEngineSpeed -= proportional_part + (rightIntegralPart*PIDRatios::INTEGRAL_MUL);
+    double sumOfPI = proportionalPart + (integralPart*PIDRatios::INTEGRAL_MUL);
+
+    double leftEngineSpeed = idleEngineSpeed + sumOfPI;
+    double rightEngineSpeed = idleEngineSpeed - sumOfPI;
 
     bound_value(leftEngineSpeed, minEngineSpeed, maxEngineSpeed);
     bound_value(rightEngineSpeed, minEngineSpeed, maxEngineSpeed);

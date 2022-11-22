@@ -7,7 +7,7 @@
 			"problemMatcher": [
 				"$platformio"
 			],
-			"label": "PlatformIO: Upload and Monitor",
+			"label": "PlatformIO: Upload and Monitor (esp32dev)",
 			"group": "build"
 		},
 		{
@@ -16,9 +16,10 @@
 			"problemMatcher": [
 				"$platformio"
 			],
-			"label": "PlatformIO: Upload",
+			"label": "PlatformIO: Upload (esp32dev)",
 			"group": {
-				"kind": "build"
+				"kind": "build",
+				"isDefault": true
 			}
 		},
 		{

@@ -21,9 +21,9 @@ constexpr int OUTER_LEFT_PIN = A5,
 constexpr int LEFT_ENGINE_PWM_CHANNEL = 1,
                 RIGHT_ENGINE_PWM_CHANNEL = 2;
 
-constexpr int SAFE_BUFFER = 200;
+constexpr int SAFE_BUFFER = 400;
 
-constexpr double MAX_SPEED = 100, MIN_SPEED = 40, STARTING_SPEED = 70.0;
+constexpr double MAX_SPEED = 100, MIN_SPEED = 0, STARTING_SPEED = 70.0;
 
 enum class CalibrationStatus
 {
