@@ -8,10 +8,10 @@ namespace PIDRatios {
                       MIDDLE_MUL = 1,
                       INTER_MUL = 2,
                       OUTER_MUL = 3,
-                      PROPORTIONAL_MUL = 0.3,
+                      PROPORTIONAL_MUL = 0.04,
                       INTEGRAL_MUL = 0.01,
-                      LIGHT_CURVE_VAL = 20,
-                      HEAVY_CURVE_VAL = 70;
+                      LIGHT_CURVE_VAL = 30,
+                      HEAVY_CURVE_VAL = 50;
 }
 
 struct RobotEngineSpeed
@@ -24,6 +24,7 @@ class RobotPID
 public:
     RobotPID(double startEngineSpeed, double maxEngineSpeed, double minEngineSpeed);
     RobotEngineSpeed calculatePID(const std::vector<double> &sensor_values);
+    void resetPID();
     PIDStatus getPIDStatus();
 private:
     bool needToSkipPID(const std::vector<double> &sensor_values);

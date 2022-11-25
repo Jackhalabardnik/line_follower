@@ -13,23 +13,30 @@ PIDStatus RobotPID::getPIDStatus()
     return pidStatus;
 }
 
+void RobotPID::resetPID() {
+    pidStatus = PIDStatus::PROPORTIONAL;
+    integralPart = 0;
+}
+
 RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values)
 {
-    if (needToSkipPID(sensor_values))
+    auto skipPID = needToSkipPID(sensor_values);
+    if (skipPID && pidStatus == PIDStatus::PROPORTIONAL)
     {
         return {idleEngineSpeed, idleEngineSpeed};
     }
 
-    updatePIDStatus(sensor_values);
-
-    double error = getError(sensor_values);
+    if(!skipPID) 
+    {
+        updatePIDStatus(sensor_values);
+    }
 
     double sum = 0;
 
     switch (pidStatus)
     {
     case PIDStatus::PROPORTIONAL:
-        sum += error * PIDRatios::PROPORTIONAL_MUL;
+        sum += getError(sensor_values) * PIDRatios::PROPORTIONAL_MUL;
         break;
     case PIDStatus::LIGHT_CURVE_LEFT:
         sum -= PIDRatios::LIGHT_CURVE_VAL;
@@ -127,10 +134,14 @@ double RobotPID::getError(const std::vector<double> &sensor_values)
 
 void RobotPID::updatePIDStatus(const std::vector<double> &sensor_values)
 {
-    if (sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER || sensor_values[3] > PIDRatios::DOWN_SENSOR_BUFFER)
+    if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        pidStatus = PIDStatus::PROPORTIONAL;
+        pidStatus = PIDStatus::HEAVY_CURVE_LEFT;
     }
+    else if (sensor_values[5] >= PIDRatios::DOWN_SENSOR_BUFFER)
+    {
+        pidStatus = PIDStatus::HEAVY_CURVE_RIGHT;
+    } 
     else if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
     {
         pidStatus = PIDStatus::LIGHT_CURVE_LEFT;
@@ -139,12 +150,8 @@ void RobotPID::updatePIDStatus(const std::vector<double> &sensor_values)
     {
         pidStatus = PIDStatus::LIGHT_CURVE_RIGHT;
     }
-    else if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
+    else if (sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER || sensor_values[3] > PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        pidStatus = PIDStatus::HEAVY_CURVE_LEFT;
-    }
-    else if (sensor_values[5] >= PIDRatios::DOWN_SENSOR_BUFFER)
-    {
-        pidStatus = PIDStatus::HEAVY_CURVE_RIGHT;
+        pidStatus = PIDStatus::PROPORTIONAL;
     }
 }

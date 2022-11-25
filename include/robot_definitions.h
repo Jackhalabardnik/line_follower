@@ -23,7 +23,7 @@ constexpr int LEFT_ENGINE_PWM_CHANNEL = 1,
 
 constexpr int SAFE_BUFFER = 400;
 
-constexpr double MAX_SPEED = 100, MIN_SPEED = 0, STARTING_SPEED = 70.0;
+constexpr double MAX_SPEED = 70.0, MIN_SPEED = 0, STARTING_SPEED = 35.0;
 
 enum class CalibrationStatus
 {

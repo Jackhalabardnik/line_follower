@@ -71,6 +71,7 @@ namespace
 		robotStatus = RobotStatus::READY;
 		leftEngine.setSpeed(0);
 		rightEngine.setSpeed(0);
+		robotPID.resetPID();
 	}
 
 	void checkSafeBuffer() {
@@ -143,6 +144,7 @@ void refreshScreen()
 			ss << std::round(sensor.getBlackPercentage()) << " ";
 		}
 		ss << "\nL: " << leftEngine.getSpeed() << " R: " << rightEngine.getSpeed() << "\n";
+		ss << robotPID.getPIDStatus() << "\n";
 	}
 
 	display.clear();
