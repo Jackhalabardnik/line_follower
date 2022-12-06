@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include "pidstatus.h"
 
 namespace PIDRatios {
     constexpr double  DOWN_SENSOR_BUFFER = 10, 
@@ -9,14 +8,17 @@ namespace PIDRatios {
                       INTER_MUL = 2,
                       OUTER_MUL = 3,
                       PROPORTIONAL_MUL = 0.04,
-                      INTEGRAL_MUL = 0.01,
-                      LIGHT_CURVE_VAL = 30,
-                      HEAVY_CURVE_VAL = 50;
+                      INTEGRAL_MUL = 0.04,
+                      DERIVATIVE_MUL = 0.04;
 }
 
 struct RobotEngineSpeed
 {
     double leftEngineSpeed, rightEngineSpeed;
+};
+
+struct PIDParts {
+    double proportional, intergal, derivative;
 };
 
 class RobotPID
@@ -25,13 +27,13 @@ public:
     RobotPID(double startEngineSpeed, double maxEngineSpeed, double minEngineSpeed);
     RobotEngineSpeed calculatePID(const std::vector<double> &sensor_values);
     void resetPID();
-    PIDStatus getPIDStatus();
+    PIDParts getPIDStatus();
+    bool isPIDSkipped();
 private:
     bool needToSkipPID(const std::vector<double> &sensor_values);
     double getError(const std::vector<double> &sensor_values);
-    void updatePIDStatus(const std::vector<double> &sensor_values);
 
-    PIDStatus pidStatus = PIDStatus::PROPORTIONAL;
     const double maxEngineSpeed, minEngineSpeed, idleEngineSpeed;
-    double integralPart = 0;
+    double proportionalPart = 0, integralPart = 0, derivativePart = 0;
+    bool PIDSkipped = false;
 };

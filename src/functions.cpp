@@ -75,8 +75,7 @@ namespace
 	}
 
 	void checkSafeBuffer() {
-		if((sensorBoard[2].getBlackPercentage() < PIDRatios::DOWN_SENSOR_BUFFER && sensorBoard[3].getBlackPercentage() < PIDRatios::DOWN_SENSOR_BUFFER) 
-		|| (sensorBoard[2].getBlackPercentage() > PIDRatios::UP_SENSOR_BUFFER && sensorBoard[3].getBlackPercentage() > PIDRatios::UP_SENSOR_BUFFER)) {
+		if(robotPID.isPIDSkipped()) {
 			safeBufferValue++;
 		} else {
 			safeBufferValue = 0;
@@ -144,7 +143,8 @@ void refreshScreen()
 			ss << std::round(sensor.getBlackPercentage()) << " ";
 		}
 		ss << "\nL: " << leftEngine.getSpeed() << " R: " << rightEngine.getSpeed() << "\n";
-		ss << robotPID.getPIDStatus() << "\n";
+		auto parts = robotPID.getPIDStatus();
+		ss << "P: " << parts.proportional << " I: " << parts.intergal << " D: " << parts.intergal << "\n";
 	}
 
 	display.clear();

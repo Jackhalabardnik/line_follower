@@ -8,49 +8,36 @@ RobotPID::RobotPID(double startEngineSpeed, double maxEngineSpeed, double minEng
       minEngineSpeed(minEngineSpeed),
       idleEngineSpeed(startEngineSpeed) {}
 
-PIDStatus RobotPID::getPIDStatus()
+PIDParts RobotPID::getPIDStatus()
 {
-    return pidStatus;
+    return {proportionalPart, integralPart, derivativePart};
+}
+
+bool RobotPID::isPIDSkipped() {
+    return PIDSkipped;
 }
 
 void RobotPID::resetPID() {
-    pidStatus = PIDStatus::PROPORTIONAL;
     integralPart = 0;
+    derivativePart = 0;
 }
 
 RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values)
 {
-    auto skipPID = needToSkipPID(sensor_values);
-    if (skipPID && pidStatus == PIDStatus::PROPORTIONAL)
-    {
-        return {idleEngineSpeed, idleEngineSpeed};
+    PIDSkipped = needToSkipPID(sensor_values);
+
+    double error = getError(sensor_values);
+
+    if(PIDSkipped) {
+        proportionalPart = 0;
+    }   else {
+        proportionalPart = error * PIDRatios::PROPORTIONAL_MUL;
+        double lastIntegralPart = integralPart;
+        integralPart += error * PIDRatios::INTEGRAL_MUL;
+        derivativePart = (lastIntegralPart - integralPart) * PIDRatios::DERIVATIVE_MUL;
     }
 
-    if(!skipPID) 
-    {
-        updatePIDStatus(sensor_values);
-    }
-
-    double sum = 0;
-
-    switch (pidStatus)
-    {
-    case PIDStatus::PROPORTIONAL:
-        sum += getError(sensor_values) * PIDRatios::PROPORTIONAL_MUL;
-        break;
-    case PIDStatus::LIGHT_CURVE_LEFT:
-        sum -= PIDRatios::LIGHT_CURVE_VAL;
-        break;
-    case PIDStatus::LIGHT_CURVE_RIGHT:
-        sum += PIDRatios::LIGHT_CURVE_VAL;
-        break;
-    case PIDStatus::HEAVY_CURVE_LEFT:
-        sum -= PIDRatios::HEAVY_CURVE_VAL;
-        break;
-    case PIDStatus::HEAVY_CURVE_RIGHT:
-        sum += PIDRatios::HEAVY_CURVE_VAL;
-        break;
-    }
+    double sum = proportionalPart + integralPart + derivativePart;
 
     double leftEngineSpeed = idleEngineSpeed + sum;
     double rightEngineSpeed = idleEngineSpeed - sum;
@@ -130,28 +117,4 @@ double RobotPID::getError(const std::vector<double> &sensor_values)
     }
 
     return error;
-}
-
-void RobotPID::updatePIDStatus(const std::vector<double> &sensor_values)
-{
-    if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
-    {
-        pidStatus = PIDStatus::HEAVY_CURVE_LEFT;
-    }
-    else if (sensor_values[5] >= PIDRatios::DOWN_SENSOR_BUFFER)
-    {
-        pidStatus = PIDStatus::HEAVY_CURVE_RIGHT;
-    } 
-    else if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
-    {
-        pidStatus = PIDStatus::LIGHT_CURVE_LEFT;
-    }
-    else if (sensor_values[4] >= PIDRatios::DOWN_SENSOR_BUFFER)
-    {
-        pidStatus = PIDStatus::LIGHT_CURVE_RIGHT;
-    }
-    else if (sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER || sensor_values[3] > PIDRatios::DOWN_SENSOR_BUFFER)
-    {
-        pidStatus = PIDStatus::PROPORTIONAL;
-    }
 }
