@@ -5,11 +5,11 @@ namespace PIDRatios {
     constexpr double  DOWN_SENSOR_BUFFER = 10, 
                       UP_SENSOR_BUFFER = 90,
                       MIDDLE_MUL = 1,
-                      INTER_MUL = 2,
-                      OUTER_MUL = 3,
-                      PROPORTIONAL_MUL = 0.04,
-                      INTEGRAL_MUL = 0.04,
-                      DERIVATIVE_MUL = 0.04;
+                      INTER_MUL = 5,
+                      OUTER_MUL = 10,
+                      PROPORTIONAL_MUL = 0.02,
+                      INTEGRAL_MUL = 0.0002,
+                      DERIVATIVE_MUL = 0.5;
 }
 
 struct RobotEngineSpeed

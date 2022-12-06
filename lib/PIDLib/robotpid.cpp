@@ -28,11 +28,11 @@ RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values
 
     double error = getError(sensor_values);
 
+    double lastIntegralPart = integralPart;
     if(PIDSkipped) {
         proportionalPart = 0;
     }   else {
         proportionalPart = error * PIDRatios::PROPORTIONAL_MUL;
-        double lastIntegralPart = integralPart;
         integralPart += error * PIDRatios::INTEGRAL_MUL;
         derivativePart = (lastIntegralPart - integralPart) * PIDRatios::DERIVATIVE_MUL;
     }
@@ -86,11 +86,11 @@ double RobotPID::getError(const std::vector<double> &sensor_values)
     {
         if (sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER && sensor_values[3] > PIDRatios::DOWN_SENSOR_BUFFER)
         {
-            error = (sensor_values[2] + sensor_values[3]) / 2;
+            error += (sensor_values[2] + sensor_values[3]) / 2;
         }
         else
         {
-            error = sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER ? sensor_values[2] : sensor_values[3];
+            error += sensor_values[2] > PIDRatios::DOWN_SENSOR_BUFFER ? sensor_values[2] : sensor_values[3];
         }
 
         if (sensor_values[2] > sensor_values[3])
@@ -99,21 +99,21 @@ double RobotPID::getError(const std::vector<double> &sensor_values)
         }
         error *= PIDRatios::MIDDLE_MUL;
     }
-    else if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
+    if (sensor_values[1] >= PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        error = sensor_values[1] * PIDRatios::INTER_MUL * -1;
+        error += sensor_values[1] * PIDRatios::INTER_MUL * -1;
     }
     else if (sensor_values[4] >= PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        error = sensor_values[4] * PIDRatios::INTER_MUL;
+        error += sensor_values[4] * PIDRatios::INTER_MUL;
     }
-    else if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
+    if (sensor_values[0] >= PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        error = sensor_values[0] * PIDRatios::OUTER_MUL * -1;
+        error += sensor_values[0] * PIDRatios::OUTER_MUL * -1;
     }
     else if (sensor_values[5] >= PIDRatios::DOWN_SENSOR_BUFFER)
     {
-        error = sensor_values[5] * PIDRatios::OUTER_MUL;
+        error += sensor_values[5] * PIDRatios::OUTER_MUL;
     }
 
     return error;

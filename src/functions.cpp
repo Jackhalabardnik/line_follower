@@ -144,7 +144,7 @@ void refreshScreen()
 		}
 		ss << "\nL: " << leftEngine.getSpeed() << " R: " << rightEngine.getSpeed() << "\n";
 		auto parts = robotPID.getPIDStatus();
-		ss << "P: " << parts.proportional << " I: " << parts.intergal << " D: " << parts.intergal << "\n";
+		ss << "P: " << std::round(parts.proportional) << " I: " << parts.intergal << " D: " << parts.derivative << "\n";
 	}
 
 	display.clear();
