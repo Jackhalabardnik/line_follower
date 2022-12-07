@@ -6,16 +6,16 @@
 
 namespace SensorUtils {
 
-constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, WINDOW_SIZE = 10;
+    constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, WINDOW_SIZE = 10;
 
-enum class CalibrationState {NONE, WHITE, BLACK};
+    enum class CalibrationState { NONE,
+                                  WHITE,
+                                  BLACK };
 
-}
+}// namespace SensorUtils
 
-class Sensor
-{
+class Sensor {
 public:
-
     Sensor(std::unique_ptr<AnalogInterface> &&analogInput);
 
     void init();

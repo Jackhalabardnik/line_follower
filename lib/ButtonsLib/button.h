@@ -1,12 +1,10 @@
 #pragma once
 #include <Arduino.h>
-#include <vector>
 #include <functional>
+#include <vector>
 
-namespace Buttons
-{
-    class Button
-    {
+namespace Buttons {
+    class Button {
     public:
         Button(int pin_number, std::function<void()> fallCallback);
 
@@ -28,4 +26,4 @@ namespace Buttons
     constexpr bool activationLevel = true;
 
     constexpr int buttonMaxScore = 10, buttonScoreThreshold = buttonMaxScore / 2;
-} // namespace Buttons
+}// namespace Buttons

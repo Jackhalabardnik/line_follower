@@ -2,8 +2,7 @@
 
 constexpr int PWM_RESOLUTION = 10, PWM_FREQUENCY = 1000, MAX_PWM_VALUE = 1 << PWM_RESOLUTION;
 
-class Engine
-{
+class Engine {
 public:
     Engine(int forwardPin, int backwardPin, int pwmPin, int pwmChannel);
 

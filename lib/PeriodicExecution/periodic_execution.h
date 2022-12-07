@@ -5,7 +5,7 @@
 
 namespace PeriodicExecution {
     struct Routine {
-        Routine(unsigned long _period, void (*_function)()); 
+        Routine(unsigned long _period, void (*_function)());
 
         unsigned long period = 0;
 
@@ -15,4 +15,4 @@ namespace PeriodicExecution {
     };
 
     void updateExecutions(std::vector<Routine> &routines);
-}
+}// namespace PeriodicExecution

@@ -1,12 +1,10 @@
 #include "engine.h"
 
 Engine::Engine(int forwardPin, int backwardPin, int pwmPin, int pwmChannel)
-    : forwardPin(forwardPin), backwardPin(backwardPin), pwmPin(pwmPin), pwmChannel(pwmChannel), pwmLevel(0)
-{
+    : forwardPin(forwardPin), backwardPin(backwardPin), pwmPin(pwmPin), pwmChannel(pwmChannel), pwmLevel(0) {
 }
 
-void Engine::init()
-{
+void Engine::init() {
     pinMode(forwardPin, OUTPUT);
     digitalWrite(forwardPin, 0);
 
@@ -18,17 +16,13 @@ void Engine::init()
     ledcWrite(pwmChannel, pwmLevel);
 }
 
-void Engine::setSpeed(double pwmPercentage)
-{
+void Engine::setSpeed(double pwmPercentage) {
     pwmPercentage = pwmPercentage < 0 ? 0 : pwmPercentage;
     pwmPercentage = pwmPercentage > 100 ? 100 : pwmPercentage;
 
-    if (pwmLevel == 0 && pwmPercentage > 0)
-    {
+    if (pwmLevel == 0 && pwmPercentage > 0) {
         digitalWrite(forwardPin, 1);
-    }
-    else if (pwmLevel > 0 && pwmPercentage == 0)
-    {
+    } else if (pwmLevel > 0 && pwmPercentage == 0) {
         digitalWrite(forwardPin, 0);
     }
 
@@ -37,7 +31,6 @@ void Engine::setSpeed(double pwmPercentage)
     ledcWrite(pwmChannel, pwmLevel);
 }
 
-int Engine::getSpeed()
-{
+int Engine::getSpeed() {
     return double(pwmLevel) / MAX_PWM_VALUE * 100;
 }
