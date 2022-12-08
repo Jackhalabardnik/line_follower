@@ -24,12 +24,11 @@ void RobotPID::resetPID() {
 RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values) {
     PIDSkipped = needToSkipPID(sensor_values);
 
-    double error = getError(sensor_values);
-
     double lastIntegralPart = integralPart;
     if (PIDSkipped) {
         proportionalPart = 0;
     } else {
+        double error = getError(sensor_values);
         proportionalPart = error * PIDRatios::PROPORTIONAL_MUL;
         integralPart += error * PIDRatios::INTEGRAL_MUL;
         derivativePart = (lastIntegralPart - integralPart) * PIDRatios::DERIVATIVE_MUL;
