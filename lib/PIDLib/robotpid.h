@@ -2,14 +2,14 @@
 #include <vector>
 
 namespace PIDRatios {
-    constexpr double DOWN_SENSOR_BUFFER = 10,
-                     UP_SENSOR_BUFFER = 90,
+    constexpr double DOWN_SENSOR_BUFFER = 5,
+                     UP_SENSOR_BUFFER = 95,
                      MIDDLE_MUL = 1,
-                     INTER_MUL = 5,
-                     OUTER_MUL = 10,
-                     PROPORTIONAL_MUL = 0.02,
-                     INTEGRAL_MUL = 0.0002,
-                     DERIVATIVE_MUL = 0.5;
+                     INTER_MUL = 7,
+                     OUTER_MUL = 14,
+                     PROPORTIONAL_MUL = 0.05,
+                     INTEGRAL_MUL = 0,
+                     DERIVATIVE_MUL = 0.6;
 }
 
 struct RobotEngineSpeed {
@@ -33,6 +33,6 @@ private:
     double getError(const std::vector<double> &sensor_values);
 
     const double maxEngineSpeed, minEngineSpeed, idleEngineSpeed;
-    double proportionalPart = 0, integralPart = 0, derivativePart = 0;
+    double proportionalPart = 0, integralPart = 0, derivativePart = 0, lastError = 0;
     bool PIDSkipped = false;
 };

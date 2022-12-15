@@ -57,13 +57,13 @@ namespace {
 
     void startFollowing() {
         robotStatus = RobotStatus::FOLLOWING;
+        robotPID.resetPID();
     }
 
     void stopFollowing() {
         robotStatus = RobotStatus::READY;
         leftEngine.setSpeed(0);
         rightEngine.setSpeed(0);
-        robotPID.resetPID();
     }
 
     void checkSafeBuffer() {
