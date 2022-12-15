@@ -7,9 +7,9 @@ namespace PIDRatios {
                      MIDDLE_MUL = 1,
                      INTER_MUL = 7,
                      OUTER_MUL = 14,
-                     PROPORTIONAL_MUL = 0.05,
+                     PROPORTIONAL_MUL = 0.3,
                      INTEGRAL_MUL = 0,
-                     DERIVATIVE_MUL = 0.6;
+                     DERIVATIVE_MUL = 0.2;
 }
 
 struct RobotEngineSpeed {
