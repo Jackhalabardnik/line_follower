@@ -195,20 +195,12 @@ void calculatePID() {
 }
 
 void debugADC() {
-    constexpr int sampling_period = 10000;
-
-    short *values = new short[sampling_period];
-
-    for (int i = 0; i < sampling_period; i++) {
-        values[i] = analogRead(INTER_LEFT_PIN);
-        delay(1);
+    int samples[] = {OUTER_LEFT_PIN, INTER_LEFT_PIN ,MID_LEFT_PIN ,MID_RIGHT_PIN ,INTER_RIGHT_PIN ,OUTER_RIGHT_PIN};
+    std::string raw_data = "";
+    for (auto pin: samples) {
+        double value = analogRead(pin);
+        raw_data += std::to_string(value) + ",";
     }
 
-    Serial.print("#############################\n");
-
-    for (int i = 0; i < sampling_period; i++) {
-        Serial.println(values[i]);
-    }
-
-    Serial.print("#############################\n");
+    Serial.println(raw_data.c_str());
 }

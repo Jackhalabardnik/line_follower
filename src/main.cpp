@@ -1,6 +1,8 @@
 #include "functions.h"
 #include "periodic_execution.h"
 
+#define LINE_SENSOR_DEBUG_MODE
+
 std::vector<PeriodicExecution::Routine> routines;
 constexpr int adcRefreshTime = 1,
               buttonRefreshTime = 2,
@@ -22,6 +24,10 @@ void setup() {
 
 void loop() {
     while (true) {
-        PeriodicExecution::updateExecutions(routines);
+        #ifdef LINE_SENSOR_DEBUG_MODE
+            debugADC();
+        #else
+            PeriodicExecution::updateExecutions(routines);
+        #endif
     }
 }
