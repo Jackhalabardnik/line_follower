@@ -1,7 +1,7 @@
 #include "functions.h"
 #include "periodic_execution.h"
 
-#define LINE_SENSOR_DEBUG_MODE
+// #define LINE_SENSOR_DEBUG_MODE
 
 std::vector<PeriodicExecution::Routine> routines;
 constexpr int adcRefreshTime = 1,

@@ -10,8 +10,7 @@
 #include <sstream>
 
 namespace {
-    CalibrationStatus calibrationStatus = CalibrationStatus::IDLE;
-    RobotStatus robotStatus = RobotStatus::UNCALIBRATED;
+    RobotStatus robotStatus = RobotStatus::READY;
 
     SSD1306Wire display(0x3c, SDA, SCL);
 
@@ -102,7 +101,6 @@ void refreshButtons() {
 }
 
 void doMainLogic() {
-    checkCalibrationStatus();
     checkRobotStatus();
     if (robotStatus == RobotStatus::FOLLOWING) {
         calculatePID();
@@ -113,20 +111,15 @@ void doMainLogic() {
 void refreshScreen() {
     std::stringstream ss;
 
-    if (robotStatus == RobotStatus::CALIBRATION) {
-        ss << calibrationStatus << "\n";
-    }
-
     ss << "Status: " << robotStatus << "\n";
 
-    if (robotStatus == RobotStatus::READY || robotStatus == RobotStatus::FOLLOWING) {
-        for (auto &sensor: sensorBoard) {
-            ss << std::round(sensor.getBlackPercentage()) << " ";
-        }
-        ss << "\nL: " << leftEngine.getSpeed() << " R: " << rightEngine.getSpeed() << "\n";
-        auto parts = robotPID.getPIDStatus();
-        ss << "P: " << std::round(parts.proportional) << " I: " << parts.intergal << " D: " << parts.derivative << "\n";
+    for (auto &sensor: sensorBoard) {
+        ss << std::round(sensor.getBlackPercentage()) << " ";
     }
+
+    ss << "\nL: " << leftEngine.getSpeed() << " R: " << rightEngine.getSpeed() << "\n";
+    auto parts = robotPID.getPIDStatus();
+    ss << "P: " << std::round(parts.proportional) << " I: " << parts.intergal << " D: " << parts.derivative << "\n";
 
     display.clear();
 
@@ -135,43 +128,10 @@ void refreshScreen() {
     display.display();
 }
 
-void checkCalibrationStatus() {
-    if (goToNextCalibrationPhase) {
-        auto calibrationState = SensorUtils::CalibrationState::NONE;
-        switch (calibrationStatus) {
-            case CalibrationStatus::IDLE:
-                if (robotStatus == RobotStatus::UNCALIBRATED || robotStatus == RobotStatus::READY) {
-                    calibrationStatus = CalibrationStatus::WHITE;
-                    robotStatus = RobotStatus::CALIBRATION;
-                    calibrationState = SensorUtils::CalibrationState::WHITE;
-                }
-                break;
-            case CalibrationStatus::WHITE:
-                calibrationStatus = CalibrationStatus::WAIT;
-                break;
-            case CalibrationStatus::WAIT:
-                calibrationStatus = CalibrationStatus::BLACK;
-                calibrationState = SensorUtils::CalibrationState::BLACK;
-                break;
-            case CalibrationStatus::BLACK:
-                calibrationStatus = CalibrationStatus::IDLE;
-                robotStatus = RobotStatus::READY;
-        }
-
-        for (auto &sensor: sensorBoard) {
-            sensor.setCalibrationState(calibrationState);
-        }
-
-        goToNextCalibrationPhase = false;
-    }
-}
 
 void checkRobotStatus() {
     if (goToNextMoveMode) {
         switch (robotStatus) {
-            case RobotStatus::UNCALIBRATED:
-            case RobotStatus::CALIBRATION:
-                break;
             case RobotStatus::READY:
                 startFollowing();
                 break;

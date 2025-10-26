@@ -13,8 +13,6 @@ void doMainLogic();
 
 void refreshScreen();
 
-void checkCalibrationStatus();
-
 void checkRobotStatus();
 
 void calculatePID();

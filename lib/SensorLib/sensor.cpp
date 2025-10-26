@@ -12,34 +12,49 @@ void Sensor::init() {
 }
 
 void Sensor::measureBlackLevel() {
-    values.emplace_back(analogInput->getValue());
-    if (values.size() > SensorUtils::WINDOW_SIZE) {
-        values.pop_front();
-    }
-    value = *std::max_element(values.begin(), values.end());
+    analog_value = analogInput->getValue();
 
-    if (calibrationState == SensorUtils::CalibrationState::WHITE && value < max) {
-        max = value;
+    if(abs(analog_value - current_sensor_value) > SensorUtils::IIR_threshold) {
+        current_sensor_value = analog_value;
+    } else {
+        current_sensor_value = current_sensor_value * SensorUtils::IIR_alpha + analog_value * (1.0 - SensorUtils::IIR_alpha);
     }
 
-    if (calibrationState == SensorUtils::CalibrationState::BLACK && value > min) {
-        min = value;
+    if(current_sensor_value > max) {
+        max = current_sensor_value;
     }
 
-    if ((calibrationState == SensorUtils::CalibrationState::WHITE || calibrationState == SensorUtils::CalibrationState::BLACK) && min == max) {
-        max = SensorUtils::MAX_SENSOR_VALUE;
-        min = SensorUtils::MIN_SENSOR_VALUE;
+    if(current_sensor_value < min) {
+        min = current_sensor_value;
     }
 }
 
 double Sensor::getBlackPercentage() const {
-    auto percentage = 100.0 - ((value - min) / (max - min)) * 100.0;
+    double dead_zone = (max-min) * 0.25;
+    
+    if(dead_zone < SensorUtils::IIR_threshold) {
+        dead_zone = SensorUtils::IIR_threshold;
+    }
+
+    double percentage = 0;
+    if(current_sensor_value - min < dead_zone) {
+        percentage = 100;
+    } 
+    else if (max - current_sensor_value < dead_zone) {
+        percentage = 0;
+    } else {
+        percentage = 100.0 - ((current_sensor_value - min) / (max - min)) * 100.0;
+    }
     bound_value(percentage, 0.0, 100.0);
     return percentage;
 }
 
 double Sensor::getDenoisedValue() const {
-    return value;
+    return current_sensor_value;
+}
+
+double Sensor::getRawValue() const {
+    return analog_value;
 }
 
 void Sensor::setCalibrationState(SensorUtils::CalibrationState state) {
