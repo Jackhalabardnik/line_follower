@@ -30,18 +30,17 @@ void Sensor::measureBlackLevel() {
 }
 
 double Sensor::getBlackPercentage() const {
-    double dead_zone = (max-min) * 0.25;
-    
-    if(dead_zone < SensorUtils::IIR_threshold) {
+    double dead_zone = (max - min) * 0.25;
+
+    if (dead_zone < SensorUtils::IIR_threshold) {
         dead_zone = SensorUtils::IIR_threshold;
     }
 
     double percentage = 0;
-    if(current_sensor_value - min < dead_zone) {
-        percentage = 100;
-    } 
-    else if (max - current_sensor_value < dead_zone) {
+    if (max - current_sensor_value < dead_zone) {
         percentage = 0;
+    } else if (current_sensor_value - min < dead_zone) {
+        percentage = 100;
     } else {
         percentage = 100.0 - ((current_sensor_value - min) / (max - min)) * 100.0;
     }
