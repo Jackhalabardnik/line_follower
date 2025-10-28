@@ -14,10 +14,13 @@ void Sensor::init() {
 void Sensor::measureBlackLevel() {
     analog_value = analogInput->getValue();
 
-    if(abs(analog_value - current_sensor_value) > SensorUtils::IIR_threshold) {
+    if(abs(analog_value - current_sensor_value) > SensorUtils::IIR_THRESHOLD) {
+        if(iir_jumps_registered < SensorUtils::IIR_JUMPS_THRESHOLD) {
+            iir_jumps_registered++;
+        }
         current_sensor_value = analog_value;
     } else {
-        current_sensor_value = current_sensor_value * SensorUtils::IIR_alpha + analog_value * (1.0 - SensorUtils::IIR_alpha);
+        current_sensor_value = current_sensor_value * SensorUtils::IIR_ALPHA + analog_value * (1.0 - SensorUtils::IIR_ALPHA);
     }
 
     if(current_sensor_value > max) {
@@ -32,18 +35,22 @@ void Sensor::measureBlackLevel() {
 double Sensor::getBlackPercentage() const {
     double dead_zone = (max - min) * 0.25;
 
-    if (dead_zone < SensorUtils::IIR_threshold) {
-        dead_zone = SensorUtils::IIR_threshold;
+    if (dead_zone < SensorUtils::IIR_THRESHOLD) {
+        dead_zone = SensorUtils::IIR_THRESHOLD;
     }
 
-    double percentage = 0;
-    if (max - current_sensor_value < dead_zone) {
-        percentage = 0;
-    } else if (current_sensor_value - min < dead_zone) {
-        percentage = 100;
-    } else {
-        percentage = 100.0 - ((current_sensor_value - min) / (max - min)) * 100.0;
+    if(iir_jumps_registered < SensorUtils::IIR_JUMPS_THRESHOLD) {
+        return 0;
     }
+
+    if (max - current_sensor_value < dead_zone) {
+        return 0;
+    }
+    if (current_sensor_value - min < dead_zone) {
+        return 100;
+    } 
+
+    double percentage = 100.0 - ((current_sensor_value - min) / (max - min)) * 100.0;
     bound_value(percentage, 0.0, 100.0);
     return percentage;
 }
