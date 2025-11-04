@@ -7,7 +7,7 @@
 namespace SensorUtils {
 
     constexpr int MIN_SENSOR_VALUE = 0, MAX_SENSOR_VALUE = 4096, WINDOW_SIZE = 10,
-                  IIR_THRESHOLD = 200, NULL_VALUE = -1, IIR_JUMPS_THRESHOLD = 3;
+                  IIR_THRESHOLD = 300, NULL_VALUE = -1, IIR_JUMPS_THRESHOLD = 3;
 
     constexpr double IIR_ALPHA = 0.95;
 
@@ -30,6 +30,8 @@ public:
     double getDenoisedValue() const;
 
     double getRawValue() const;
+
+    void reset_sensor();
 
     void setCalibrationState(SensorUtils::CalibrationState state);
 

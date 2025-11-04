@@ -32,11 +32,11 @@ RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values
         double error = getError(sensor_values);
         proportionalPart = PIDRatios::PROPORTIONAL_MUL * error;
         integralPart += error * PIDRatios::INTEGRAL_MUL;
-        derivativePart = error; //(error - lastError) * PIDRatios::DERIVATIVE_MUL;
+        derivativePart = (error - lastError) * PIDRatios::DERIVATIVE_MUL;
         lastError = error;
     }
 
-    double sum = proportionalPart; // + integralPart + derivativePart;
+    double sum = proportionalPart + integralPart + derivativePart;
 
     double leftEngineSpeed = maxEngineSpeed;
     double rightEngineSpeed = maxEngineSpeed;
@@ -82,8 +82,8 @@ bool RobotPID::needToSkipPID(const std::vector<double> &sensor_values) {
 double RobotPID::getError(const std::vector<double> &sensor_values) {
     double error = 0;
 
-    error += PIDRatios::INTER_MUL*(sensor_values[2] - sensor_values[3]);
-    error += PIDRatios::MIDDLE_MUL*(sensor_values[1] - sensor_values[4]);
+    error += PIDRatios::MIDDLE_MUL*(sensor_values[2] - sensor_values[3]);
+    error += PIDRatios::INTER_MUL*(sensor_values[1] - sensor_values[4]);
     error += PIDRatios::OUTER_MUL*(sensor_values[0] - sensor_values[5]);
 
     return error;

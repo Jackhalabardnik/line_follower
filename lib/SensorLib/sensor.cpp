@@ -71,3 +71,10 @@ void Sensor::setCalibrationState(SensorUtils::CalibrationState state) {
         min = SensorUtils::MIN_SENSOR_VALUE;
     }
 }
+
+void Sensor::reset_sensor() {
+    current_sensor_value = SensorUtils::NULL_VALUE;
+    min = SensorUtils::MAX_SENSOR_VALUE;
+    max = SensorUtils::MIN_SENSOR_VALUE;
+    analog_value = 0;
+}
