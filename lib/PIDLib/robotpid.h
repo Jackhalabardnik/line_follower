@@ -5,15 +5,15 @@ namespace PIDRatios {
     constexpr double DOWN_SENSOR_BUFFER = 5,
                      UP_SENSOR_BUFFER = 95,
                      MIDDLE_PART = 1,
-                     INTER_PART = 4,
-                     OUTER_PART = 6,
+                     INTER_PART = 25,
+                     OUTER_PART = 50,
                      PART_SUM = MIDDLE_PART+INTER_PART+OUTER_PART,
                      MIDDLE_MUL = MIDDLE_PART/PART_SUM,
                      INTER_MUL = INTER_PART/PART_SUM,
                      OUTER_MUL = OUTER_PART/PART_SUM,
-                     PROPORTIONAL_MUL = 3,
-                     INTEGRAL_MUL = 0.1,
-                     DERIVATIVE_MUL = 0;
+                     PROPORTIONAL_MUL = 15,
+                     INTEGRAL_MUL = 0.025,
+                     DERIVATIVE_MUL = 10;
 
 }
 

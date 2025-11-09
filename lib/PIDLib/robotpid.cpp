@@ -24,7 +24,7 @@ void RobotPID::resetPID() {
 
 RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values) {
     PIDSkipped = needToSkipPID(sensor_values);
-    PIDSkipped = false;
+    // PIDSkipped = false;
 
     if (PIDSkipped) {
         proportionalPart = 0;

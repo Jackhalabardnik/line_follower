@@ -104,7 +104,7 @@ void doMainLogic() {
     checkRobotStatus();
     if (robotStatus == RobotStatus::FOLLOWING) {
         calculatePID();
-        // checkSafeBuffer();
+        checkSafeBuffer();
     }
 }
 
