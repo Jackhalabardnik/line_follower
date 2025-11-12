@@ -16,7 +16,7 @@ namespace {
 
     std::vector<Sensor> sensorBoard = {};
 
-    RobotPID robotPID(STARTING_SPEED, MAX_SPEED, MIN_SPEED);
+    RobotPID robotPID(MAX_SPEED, MIN_SPEED);
 
     Engine leftEngine(FORWARD_LEFT_ENGINE_PIN, BACKWARD_LEFT_ENGINE_PIN, PWM_LEFT_ENGINE_PIN, LEFT_ENGINE_PWM_CHANNEL),
             rightEngine(FORWARD_RIGHT_ENGINE_PIN, BACKWARD_RIGHT_ENGINE_PIN, PWM_RIGHT_ENGINE_PIN, RIGHT_ENGINE_PWM_CHANNEL);
@@ -61,8 +61,7 @@ namespace {
 
     void stopFollowing() {
         robotStatus = RobotStatus::READY;
-        leftEngine.setSpeed(0);
-        rightEngine.setSpeed(0);
+        setEngineSpeed({0,0});
     }
 
     void checkSafeBuffer() {
@@ -102,8 +101,9 @@ void refreshButtons() {
 
 void doMainLogic() {
     checkRobotStatus();
+    auto speed = calculatePID();
     if (robotStatus == RobotStatus::FOLLOWING) {
-        calculatePID();
+        setEngineSpeed(speed);
         checkSafeBuffer();
     }
 }
@@ -116,6 +116,8 @@ void refreshScreen() {
     for (auto &sensor: sensorBoard) {
         ss << std::round(sensor.getBlackPercentage()) << " ";
     }
+
+    ss << "\nE: " << robotPID.getLastError() << " Skip: " << robotPID.isPIDSkipped() << "\n";
 
     ss << "\nL: " << leftEngine.getSpeed() << " R: " << rightEngine.getSpeed() << "\n";
     auto parts = robotPID.getPIDStatus();
@@ -142,16 +144,18 @@ void checkRobotStatus() {
     }
 }
 
-void calculatePID() {
+RobotEngineSpeed calculatePID() {
     std::vector<double> percentages;
     for (const auto &sensor: sensorBoard) {
         percentages.emplace_back(sensor.getBlackPercentage());
     }
 
-    auto velocities = robotPID.calculatePID(percentages);
+    return robotPID.calculatePID(percentages);
+}
 
-    leftEngine.setSpeed(velocities.leftEngineSpeed);
-    rightEngine.setSpeed(velocities.rightEngineSpeed);
+void setEngineSpeed(RobotEngineSpeed speed) {
+    leftEngine.setSpeed(speed.leftEngineSpeed);
+    rightEngine.setSpeed(speed.rightEngineSpeed);
 }
 
 void debugADC() {

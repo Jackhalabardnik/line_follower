@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 #include <SSD1306Wire.h>
+#include "robotpid.h"
 
 void initDevices();
 
@@ -15,6 +16,8 @@ void refreshScreen();
 
 void checkRobotStatus();
 
-void calculatePID();
+RobotEngineSpeed calculatePID();
+
+void setEngineSpeed(RobotEngineSpeed speed);
 
 void debugADC();
