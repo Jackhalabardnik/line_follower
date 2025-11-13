@@ -36,6 +36,8 @@ RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values
     double min_speed = std::min(lastEngineSpeed.leftEngineSpeed, lastEngineSpeed.rightEngineSpeed);
     double engine_mul = (1 - PIDRatios::ENGINE_MUL) * ((min_speed - minEngineSpeed) / (maxEngineSpeed - minEngineSpeed) * PIDRatios::ENGINE_MUL);
 
+    engine_mul = 1;
+
     proportionalPart = current_error * PIDRatios::PROPORTIONAL_MUL * engine_mul;
     integralPart += current_error * PIDRatios::INTEGRAL_MUL * engine_mul;
     derivativePart = (current_error - lastError) * PIDRatios::DERIVATIVE_MUL * engine_mul;
@@ -48,10 +50,10 @@ RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values
     
     // CHANGE ENGINE MUUUUUUUUUUUUUUUUUUUUUUUUUL
     if(sum < 0) {
-        rightEngineSpeed += maxEngineSpeed * (sum/maxEngineSpeed);
+        leftEngineSpeed += maxEngineSpeed * (sum/maxEngineSpeed);
     }
     if(sum > 0) {
-        leftEngineSpeed -= maxEngineSpeed * (sum/maxEngineSpeed);
+        rightEngineSpeed -= maxEngineSpeed * (sum/maxEngineSpeed);
     }
 
     bound_value(leftEngineSpeed, minEngineSpeed, maxEngineSpeed);

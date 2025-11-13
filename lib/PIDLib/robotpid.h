@@ -6,14 +6,14 @@ namespace PIDRatios {
                      UP_SENSOR_BUFFER = 95,
                      MIDDLE_PART = 1,
                      INTER_PART = 2,
-                     OUTER_PART = 3,
+                     OUTER_PART = 5,
                      PART_SUM = MIDDLE_PART+INTER_PART+OUTER_PART,
                      MIDDLE_MUL = MIDDLE_PART/PART_SUM,
                      INTER_MUL = INTER_PART/PART_SUM,
                      OUTER_MUL = OUTER_PART/PART_SUM,
-                     PROPORTIONAL_MUL = 2000,
-                     INTEGRAL_MUL = 0.025,
-                     DERIVATIVE_MUL = 100,
+                     PROPORTIONAL_MUL = 250,
+                     INTEGRAL_MUL = 0.01,
+                     DERIVATIVE_MUL = 300,
                      ENGINE_MUL = 0.3;
 
 }
