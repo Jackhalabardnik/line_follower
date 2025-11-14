@@ -15,4 +15,5 @@ public:
 private:
     const int forwardPin, backwardPin, pwmPin, pwmChannel;
     int pwmLevel;
+    double lastPwmPercentage;
 };

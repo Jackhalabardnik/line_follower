@@ -3,6 +3,12 @@
 
 #include <math.h>
 
+namespace {
+    double getSecondEngineMul(double firstSpeed, double maxSpeed) {
+        return ((1-PIDRatios::ENGINE_MUL) + PIDRatios::ENGINE_MUL * firstSpeed/maxSpeed);
+    }
+}
+
 RobotPID::RobotPID(double maxEngineSpeed, double minEngineSpeed)
     : maxEngineSpeed(maxEngineSpeed),
       minEngineSpeed(minEngineSpeed){}
@@ -33,31 +39,34 @@ RobotEngineSpeed RobotPID::calculatePID(const std::vector<double> &sensor_values
         current_error = getError(sensor_values);
     }
 
-    double min_speed = std::min(lastEngineSpeed.leftEngineSpeed, lastEngineSpeed.rightEngineSpeed);
-    double engine_mul = (1 - PIDRatios::ENGINE_MUL) * ((min_speed - minEngineSpeed) / (maxEngineSpeed - minEngineSpeed) * PIDRatios::ENGINE_MUL);
+    // 1. IIR on derivative
+    // 2. Integral bonding
 
-    engine_mul = 1;
-
-    proportionalPart = current_error * PIDRatios::PROPORTIONAL_MUL * engine_mul;
-    integralPart += current_error * PIDRatios::INTEGRAL_MUL * engine_mul;
-    derivativePart = (current_error - lastError) * PIDRatios::DERIVATIVE_MUL * engine_mul;
+    proportionalPart = current_error * PIDRatios::PROPORTIONAL_MUL;
+    integralPart += current_error*PIDRatios::D_TIME;
+    bound_value(integralPart, -PIDRatios::INTEGRAL_MAX, PIDRatios::INTEGRAL_MAX);
+    derivativePart = PIDRatios::DERIVATIVE_APLHA * derivativePart + 
+                     (current_error - lastError) / PIDRatios::D_TIME * (1-PIDRatios::DERIVATIVE_APLHA);
     lastError = current_error;
 
-    double sum = proportionalPart + integralPart + derivativePart;
+    double sum = proportionalPart + integralPart * PIDRatios::INTEGRAL_MUL + derivativePart * PIDRatios::DERIVATIVE_MUL;
 
     double leftEngineSpeed = maxEngineSpeed;
     double rightEngineSpeed = maxEngineSpeed;
     
-    // CHANGE ENGINE MUUUUUUUUUUUUUUUUUUUUUUUUUL
     if(sum < 0) {
-        leftEngineSpeed += maxEngineSpeed * (sum/maxEngineSpeed);
+        leftEngineSpeed += sum;
+        bound_value(leftEngineSpeed, minEngineSpeed, maxEngineSpeed);
+        rightEngineSpeed *= getSecondEngineMul(leftEngineSpeed, maxEngineSpeed);
     }
     if(sum > 0) {
-        rightEngineSpeed -= maxEngineSpeed * (sum/maxEngineSpeed);
+        rightEngineSpeed -= sum;
+        bound_value(rightEngineSpeed, minEngineSpeed, maxEngineSpeed);
+        leftEngineSpeed *= getSecondEngineMul(rightEngineSpeed, maxEngineSpeed);
     }
 
-    bound_value(leftEngineSpeed, minEngineSpeed, maxEngineSpeed);
-    bound_value(rightEngineSpeed, minEngineSpeed, maxEngineSpeed);
+    bound_value(leftEngineSpeed, -100.0, 100.0);
+    bound_value(rightEngineSpeed, -100.0, 100.0);
 
     lastEngineSpeed = {leftEngineSpeed, rightEngineSpeed};
 
@@ -94,17 +103,17 @@ bool RobotPID::needToSkipPID(const std::vector<double> &sensor_values) {
 double RobotPID::getError(const std::vector<double> &sensor_values) {
     double error = 0;
 
-    if(sensor_values[0] > PIDRatios::DOWN_SENSOR_BUFFER && lastError < PIDRatios::MIDDLE_MUL) {
+    if(sensor_values[0] > PIDRatios::DOWN_SENSOR_BUFFER) { //&& lastError < PIDRatios::MIDDLE_MUL) {
         return -PIDRatios::OUTER_MUL;
     }
-    if(sensor_values[5] > PIDRatios::DOWN_SENSOR_BUFFER && lastError > PIDRatios::MIDDLE_MUL) {
+    if(sensor_values[5] > PIDRatios::DOWN_SENSOR_BUFFER) { //&& lastError > PIDRatios::MIDDLE_MUL) {
         return PIDRatios::OUTER_MUL;
     }
 
-    if(sensor_values[1] > PIDRatios::DOWN_SENSOR_BUFFER && lastError < 0) {
+    if(sensor_values[1] > PIDRatios::DOWN_SENSOR_BUFFER) { //&& lastError < 0) {
         return -PIDRatios::INTER_MUL;
     }
-    if(sensor_values[4] > PIDRatios::DOWN_SENSOR_BUFFER && lastError > 0) {
+    if(sensor_values[4] > PIDRatios::DOWN_SENSOR_BUFFER) { //&& lastError > 0) {
         return PIDRatios::INTER_MUL;
     }
 

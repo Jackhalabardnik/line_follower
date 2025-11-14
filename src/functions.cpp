@@ -27,7 +27,7 @@ namespace {
          goToNextMoveMode = false;
 
     std::vector<Buttons::Button> buttons = {
-            {CALIBRATION_PIN, []() { for(auto &sensor: sensorBoard) sensor.reset_sensor(); }},
+            {CALIBRATION_PIN, []() { for(auto &sensor: sensorBoard) {sensor.reset_sensor(); } robotPID.resetPID(); }},
             {ROBOT_STATUS_PIN, []() { goToNextMoveMode = true; }}};
 
     void initOLED() {

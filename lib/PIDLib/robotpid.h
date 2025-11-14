@@ -11,10 +11,13 @@ namespace PIDRatios {
                      MIDDLE_MUL = MIDDLE_PART/PART_SUM,
                      INTER_MUL = INTER_PART/PART_SUM,
                      OUTER_MUL = OUTER_PART/PART_SUM,
-                     PROPORTIONAL_MUL = 250,
-                     INTEGRAL_MUL = 0.01,
-                     DERIVATIVE_MUL = 300,
-                     ENGINE_MUL = 0.3;
+                     PROPORTIONAL_MUL = 350,
+                     INTEGRAL_MUL = 0,
+                     DERIVATIVE_MUL = 0,
+                     ENGINE_MUL = 0,
+                     INTEGRAL_MAX = 1,
+                     DERIVATIVE_APLHA = 0.95,
+                     D_TIME = 0.0011;
 
 }
 
